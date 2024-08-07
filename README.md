@@ -35,7 +35,7 @@ cd backend
 node server.js
 
 ## Start the React App
-cd todo-app
+cd app-name
 npm start
 
 
