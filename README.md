@@ -1,1 +1,1 @@
-# forms_team_trial
+This project contains basic mathematical functions including addition, subtraction, multiplication, and division. Each function is accompanied by unit tests using Jest.
