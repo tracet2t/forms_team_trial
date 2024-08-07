@@ -35,8 +35,8 @@ npm test
 #Expected Output
 
 PASS  ./sum.test.js
-✓ adds 1 + 2 to equal 3
-✓ adds 0 + 0 to equal 0
-✓ adds -1 + 1 to equal 0
-✓ adds 100 + 200 to equal 300
-✓ adds -100 + -200 to equal -300
+-adds 1 + 2 to equal 3
+- adds 0 + 0 to equal 0
+- adds -1 + 1 to equal 0
+- adds 100 + 200 to equal 300
+  -adds -100 + -200 to equal -300
