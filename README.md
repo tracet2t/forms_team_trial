@@ -12,8 +12,9 @@ cd app-name
 
 use npm install
 
-Install Dependencies - <a> npm install axios </a>
-                       <a> npm install cors </a> 
+Install Dependencies - 
+* npm install axios
+* npm install cors 
 
 
 ## Backend (Express)
