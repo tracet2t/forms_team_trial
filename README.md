@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Creating a to-do application using React for the frontend and SQLite for the backend.
 
 * Here's an outline of what we'll build
@@ -41,3 +42,6 @@ npm start
 
 
 
+=======
+# forms_team_trial
+>>>>>>> origin/lakshanan
