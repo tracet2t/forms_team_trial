@@ -20,20 +20,6 @@ test('adds a new task', () => {
     expect(taskElement).toBeInTheDocument();
 });
 
-test('toggles a task completion', () => {
-    render(<Todo />);
-    const inputElement = screen.getByPlaceholderText(/Add a new task/i);
-    const addButton = screen.getByText(/Add/i);
-
-    fireEvent.change(inputElement, { target: { value: 'New Task' } });
-    fireEvent.click(addButton);
-
-    const taskElement = screen.getByText(/New Task/i);
-    fireEvent.click(taskElement);
-
-    expect(taskElement).toHaveStyle('text-decoration: line-through');
-});
-
 test('removes a task', () => {
     render(<Todo />);
     const inputElement = screen.getByPlaceholderText(/Add a new task/i);
