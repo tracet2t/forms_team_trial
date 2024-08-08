@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './Todo.css';
 
 const Todo = () => {
     const [tasks, setTasks] = useState([]);
@@ -27,7 +28,7 @@ const Todo = () => {
     };
 
     return (
-        <div>
+        <div className="todo-container">
             <h1>To-Do List</h1>
             <input 
                 type="text" 
@@ -40,7 +41,7 @@ const Todo = () => {
                 {tasks.map((task, index) => (
                     <li key={index}>
                         <span 
-                            style={{ textDecoration: task.completed ? 'line-through' : 'none' }}
+                            className={task.completed ? 'completed' : ''}
                             onClick={() => toggleTask(index)}
                         >
                             {task.text}
