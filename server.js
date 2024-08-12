@@ -4,10 +4,23 @@ const sqlite3 = require('sqlite3').verbose();
 const app = express();
 const port = 3000;
 
+const cors = require('cors');
+app.use(cors());
+
 // Database setup
-const db = new sqlite3.Database(':memory:');
+const db = new sqlite3.Database('./tasks.db');
+
+// Create the table if it does not exist
 db.serialize(() => {
-    db.run("CREATE TABLE tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT, dueDate TEXT, priority TEXT)");
+    db.run(`
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            description TEXT,
+            dueDate TEXT,
+            priority TEXT
+        )
+    `);
 });
 
 app.use(bodyParser.json());
@@ -24,6 +37,16 @@ app.post('/tasks', (req, res) => {
         res.status(201).json({ id: this.lastID, title, description, dueDate, priority });
     });
     stmt.finalize();
+});
+
+// Endpoint to get all tasks
+app.get('/tasks', (req, res) => {
+    db.all("SELECT * FROM tasks", [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
 });
 
 app.listen(port, () => {
