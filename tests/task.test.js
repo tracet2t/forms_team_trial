@@ -4,11 +4,19 @@ const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
-const db = new sqlite3.Database('./tasks.db');
+const db = new sqlite3.Database(':memory:');
 
 // Database setup
 db.serialize(() => {
-    db.run("CREATE TABLE tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT, dueDate TEXT, priority TEXT)");
+    db.run(`
+        CREATE TABLE tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            description TEXT,
+            dueDate TEXT,
+            priority TEXT
+        )
+    `);
 });
 
 app.use(bodyParser.json());
@@ -26,6 +34,17 @@ app.post('/tasks', (req, res) => {
     stmt.finalize();
 });
 
+// Endpoint to get all tasks
+app.get('/tasks', (req, res) => {
+    db.all("SELECT * FROM tasks", [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
+});
+
+// Test cases
 describe('POST /tasks', () => {
     it('should create a new task', async () => {
         const response = await request(app)
