@@ -30,4 +30,13 @@ exports.getCompletedTodos = (req, res) => {
       res.json({ success: true });
     });
   };
+  exports.completeTodo = (req, res) => {
+    const { id } = req.params;
+    const completedOn = new Date();
+    const sql = 'UPDATE todos SET completed = 1, completedOn = ? WHERE id = ?';
+    connection.query(sql, [completedOn, id], (err) => {
+      if (err) throw err;
+      res.json({ success: true, completedOn });
+    });
+  };
   
