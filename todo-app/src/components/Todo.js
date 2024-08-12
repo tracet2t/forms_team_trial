@@ -30,6 +30,7 @@ const Todo = () => {
     return (
         <div className="todo-container">
             <h1>To-Do List</h1>
+            <h2>check</h2>
             <input 
                 type="text" 
                 value={input} 
