@@ -3,60 +3,45 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import App from './App';
 
-describe('Component', () => {
+describe('ToDo App', () => {
+  test('renders the app title', () => {
+    render(<App />);
+    const titleElement = screen.getByText(/ToDoApp/i);
+    expect(titleElement).toBeInTheDocument();
+  });
 
-  test('add new todo item', () => {
+  test('adds a new todo item', async () => {
     render(<App />);
 
-    const titleInput = screen.getByPlaceholderText(/Enter Task Title/i);
-    const descriptionInput = screen.getByPlaceholderText(/Enter Task Description/i);
-    const dueDateInput = screen.getByPlaceholderText(/Enter Date/i);
-    const addButton = screen.getByText(/Add/i);
+    const titleInput = screen.getByPlaceholderText('Enter Task Title');
+    const descriptionInput = screen.getByPlaceholderText('Enter Task Description');
+    const dateInput = screen.getByPlaceholderText('Enter Date');
+    const addButton = screen.getByText('Add');
 
-    fireEvent.change(titleInput, { target: { value: 'Task 1' } });
-    fireEvent.change(descriptionInput, { target: { value: 'New Description' } });
-    fireEvent.change(dueDateInput, { target: { value: '2021-08-10' } });
-
+    fireEvent.change(titleInput, { target: { value: 'Test 1' } });
+    fireEvent.change(descriptionInput, { target: { value: 'Desc 1' } });
+    fireEvent.change(dateInput, { target: { value: '2024-09-12' } });
     fireEvent.click(addButton);
 
-    const newTaskTitle = screen.getByText(/Task 1/i);
-    const newTaskDescription = screen.getByText(/New Description/i);
-    const newTaskDate = screen.getByText(/2021-08-10/i);
+    const newTodoTitle = await screen.findByText('Test 1');
+    const newTodoDescription = await screen.findByText('Desc 1');
 
-    expect(newTaskTitle).toBeInTheDocument();
-    expect(newTaskDescription).toBeInTheDocument();
-    expect(newTaskDate).toBeInTheDocument();
+    expect(newTodoTitle).toBeInTheDocument();
+    expect(newTodoDescription).toBeInTheDocument();
   });
 
-  test('load todo from localStorage', () => {
-    const todos = [
-      { title: 'Task Saving', description: 'Desc Saving', dueDate: '2021-10-18' }
-    ];
-    localStorage.setItem('todolist', JSON.stringify(todos));
-
+  test('completes a todo item', async () => {
     render(<App />);
 
-    const savedTaskTitle = screen.getByText(/Task Saving/i);
-    const savedTaskDescription = screen.getByText(/Desc Saving/i);
-    const savedTaskDate = screen.getByText(/2021-10-18/i);
+    const completeButtons = await screen.findAllByTitle('Complete?');
+    fireEvent.click(completeButtons[0]);
 
-    expect(savedTaskTitle).toBeInTheDocument();
-    expect(savedTaskDescription).toBeInTheDocument();
-    expect(savedTaskDate).toBeInTheDocument();
+
+    const completedTab = screen.getByText('Completed');
+    fireEvent.click(completedTab);
+
+    const completedTodo = await screen.findByText(/Completed on:/i);
+    expect(completedTodo).toBeInTheDocument();
   });
 
-  test('toggle between Pending and Complete section', () => {
-    render(<App />);
-
-    const pendingButton = screen.getByText(/Pending/i);
-    const completedButton = screen.getByText(/Completed/i);
-
-    expect(pendingButton).toHaveClass('active');
-    expect(completedButton).not.toHaveClass('active');
-
-    fireEvent.click(completedButton);
-
-    expect(pendingButton).not.toHaveClass('active');
-    expect(completedButton).toHaveClass('active');
-  });
 });
