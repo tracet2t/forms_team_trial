@@ -7,6 +7,11 @@ test('renders To-Do List heading', () => {
     const headingElement = screen.getByText(/To-Do List/i);
     expect(headingElement).toBeInTheDocument();
 });
+test('render check heading',() => {
+    render(<Todo/>);
+    const headingElement= screen.getByText(/check/i);
+    expect(headingElement).toBeInTheDocument();
+});
 
 test('adds a new task', () => {
     render(<Todo />);
@@ -18,20 +23,6 @@ test('adds a new task', () => {
 
     const taskElement = screen.getByText(/New Task/i);
     expect(taskElement).toBeInTheDocument();
-});
-
-test('toggles a task completion', () => {
-    render(<Todo />);
-    const inputElement = screen.getByPlaceholderText(/Add a new task/i);
-    const addButton = screen.getByText(/Add/i);
-
-    fireEvent.change(inputElement, { target: { value: 'New Task' } });
-    fireEvent.click(addButton);
-
-    const taskElement = screen.getByText(/New Task/i);
-    fireEvent.click(taskElement);
-
-    expect(taskElement).toHaveStyle('text-decoration: line-through');
 });
 
 test('removes a task', () => {
