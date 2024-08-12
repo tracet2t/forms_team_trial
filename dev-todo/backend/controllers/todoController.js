@@ -22,4 +22,12 @@ exports.getCompletedTodos = (req, res) => {
       res.json({ id: result.insertId, title, description, dueDate, completed: 0 });
     });
   };
+  exports.deleteTodo = (req, res) => {
+    const { id } = req.params;
+    const sql = 'DELETE FROM todos WHERE id = ?';
+    connection.query(sql, [id], (err) => {
+      if (err) throw err;
+      res.json({ success: true });
+    });
+  };
   
