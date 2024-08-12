@@ -1,81 +1,192 @@
-const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const bodyParser = require('body-parser');
-const cors = require('cors');
+const express = require('express'); 
+const sqlite3 = require('sqlite3').verbose(); 
+const bodyParser = require('body-parser'); 
+const cors = require('cors'); 
+const cron = require('node-cron'); 
+const nodemailer = require('nodemailer'); 
 
-const app = express();
-const db = new sqlite3.Database('./mydb.sqlite');
+const app = express(); 
+const db = new sqlite3.Database('./db.sqlite'); 
 
-// Middleware setup
-app.use(bodyParser.json());
-app.use(cors());
+app.use(bodyParser.json()); 
+app.use(cors()); 
 
-// Initialize the database
+// Initialize database tables if they don't exist
 db.serialize(() => {
+  // Create the todos table with various fields including an expiration date
   db.run(`CREATE TABLE IF NOT EXISTS todos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     description TEXT,
     dueDate TEXT,
-    priority TEXT
-  )`, (err) => {
-    if (err) {
-      console.error('Error creating table:', err.message);
+    priority TEXT,
+    expiration TEXT,
+    completed INTEGER DEFAULT 0
+  )`);
+
+  // Create the notifications table to track which todos have been notified
+  db.run(`CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    todoId INTEGER,
+    notifiedAt DATETIME,
+    FOREIGN KEY (todoId) REFERENCES todos(id)
+  )`);
+});
+
+// Configure the email transporter for sending notifications
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'lakshanans1121@gmail.com', 
+    pass: '0779117370Sl@!' 
+  }
+});
+
+// Function to send an email notification
+const sendNotificationEmail = (todo) => {
+  const mailOptions = {
+    from: 'lakshanans1121@gmail.com',
+    to: 's92061078@ousl.lk',
+    subject: 'Reminder: Task Due Soon',
+    text: `Reminder: The task "${todo.title}" is approaching its due date (${todo.dueDate}).`
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error); 
     } else {
-      console.log('Table created successfully');
+      console.log('Email sent:', info.response); 
     }
+  });
+};
+
+// Scheduled task to check for upcoming tasks and send notifications
+cron.schedule('*/10 * * * *', () => {
+  const now = new Date();
+  const upcomingTime = new Date(now.getTime() + 10 * 60000); // 10 minutes from now
+
+  db.all(`SELECT * FROM todos
+          WHERE dueDate IS NOT NULL
+          AND completed = 0
+          AND strftime('%Y-%m-%dT%H:%M:%S', dueDate) <= strftime('%Y-%m-%dT%H:%M:%S', ?)
+          AND id NOT IN (SELECT todoId FROM notifications)`, [upcomingTime.toISOString()], (err, todos) => {
+    if (err) {
+      console.error('Error fetching todos for notifications:', err); 
+      return;
+    }
+
+    // Send an email for each upcoming task
+    todos.forEach(todo => {
+      sendNotificationEmail(todo); 
+      // Record the notification in the database
+      db.run('INSERT INTO notifications (todoId, notifiedAt) VALUES (?, ?)', [todo.id, now.toISOString()], (err) => {
+        if (err) {
+          console.error('Error inserting notification record:', err); 
+        }
+      });
+    });
   });
 });
 
-// Get all todos
+// Route to get all todos, with optional filtering and sorting
 app.get('/api/todos', (req, res) => {
-  db.all('SELECT * FROM todos', (err, rows) => {
-    if (err) {
-      console.error('Error fetching todos:', err.message);
-      res.status(500).send('Error fetching todos');
-    } else {
-      res.json(rows);
+  const { status, sortBy } = req.query;
+
+  let query = 'SELECT * FROM todos';
+  const params = [];
+
+  // Add filtering by status if specified
+  if (status) {
+    if (status === 'completed') {
+      query += ' WHERE completed = 1';
+    } else if (status === 'pending') {
+      query += ' WHERE completed = 0';
     }
-  });
-});
-
-// Add a new todo
-app.post('/api/todos', (req, res) => {
-  const { title, description, dueDate, priority } = req.body;
-
-  if (!title) {
-    return res.status(400).send('Title is required');
   }
 
-  db.run(
-    'INSERT INTO todos (title, description, dueDate, priority) VALUES (?, ?, ?, ?)',
-    [title, description, dueDate, priority],
-    function (err) {
-      if (err) {
-        console.error('Error adding todo:', err.message);
-        res.status(500).send('Error adding todo');
-      } else {
-        res.json({ id: this.lastID, title, description, dueDate, priority });
-      }
+  // Add sorting if specified
+  if (sortBy) {
+    if (sortBy === 'dueDate') {
+      query += ' ORDER BY dueDate';
+    } else if (sortBy === 'priority') {
+      query += ' ORDER BY priority';
     }
-  );
-});
+  }
 
-// Delete a todo
-app.delete('/api/todos/:id', (req, res) => {
-  const { id } = req.params;
-  db.run('DELETE FROM todos WHERE id = ?', id, function (err) {
+  db.all(query, params, (err, rows) => {
     if (err) {
-      console.error('Error deleting todo:', err.message);
-      res.status(500).send('Error deleting todo');
-    } else {
-      res.status(204).send();
+      return res.status(500).send('Error fetching todos'); 
     }
+    res.json(rows); 
   });
 });
 
+// Route to get a specific todo by its ID
+app.get('/api/todos/:id', (req, res) => {
+  const { id } = req.params;
+  db.get('SELECT * FROM todos WHERE id = ?', id, (err, row) => {
+    if (err) {
+      return res.status(500).send('Error fetching todo'); 
+    }
+    if (!row) {
+      return res.status(404).send('Todo not found'); 
+    }
+    // Convert completed to boolean for consistency
+    row.completed = row.completed === 1;
+    res.json(row); // Return the todo in JSON format
+  });
+});
+
+// Route to create a new todo
+app.post('/api/todos', (req, res) => {
+  const { title, description, dueDate, priority, expiration } = req.body;
+
+  if (!title) {
+    return res.status(400).send('Title is required'); 
+  }
+
+  db.run('INSERT INTO todos (title, description, dueDate, priority, expiration) VALUES (?, ?, ?, ?, ?)', 
+    [title, description, dueDate, priority, expiration], 
+    function(err) {
+      if (err) {
+        return res.status(500).send('Error adding todo'); 
+      }
+      res.json({ id: this.lastID, title, description, dueDate, priority, expiration, completed: false }); // Return the new todo
+  });
+});
+
+// Route to delete a todo by its ID
+app.delete('/api/todos/:id', (req, res) => {
+  const { id } = req.params;
+  db.run('DELETE FROM todos WHERE id = ?', id, function(err) {
+    if (err) {
+      return res.status(500).send('Error deleting todo'); 
+    }
+    if (this.changes === 0) {
+      return res.status(404).send('Todo not found'); 
+    }
+    res.status(204).send(); 
+  });
+});
+
+// Route to mark a todo as completed
+app.patch('/api/todos/:id/complete', (req, res) => {
+  const { id } = req.params;
+  db.run('UPDATE todos SET completed = true WHERE id = ?', id, function(err) {
+    if (err) {
+      return res.status(500).send('Error updating todo'); 
+    }
+    if (this.changes === 0) {
+      return res.status(404).send('Todo not found'); 
+    }
+    res.status(200).send('Todo marked as completed'); 
+  });
+});
+/*
 // Start the server
 const PORT = 5001;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`); 
 });
+*/
+module.exports = { app, db }; 

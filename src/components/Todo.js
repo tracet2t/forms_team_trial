@@ -9,13 +9,21 @@ function Todo() {
     title: '',
     description: '',
     dueDate: '',
+    expiration: '',
     priority: 'Medium',
   });
+  const [filter, setFilter] = useState('all'); // Filter by status: 'all', 'completed', 'pending'
+  const [sortBy, setSortBy] = useState('dueDate'); // Sort by 'dueDate' or 'priority'
 
-  // Function to fetch all todos
+  // Function to fetch all todos with filtering and sorting
   const fetchTodos = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/todos');
+      const response = await axios.get('http://localhost:5001/api/todos', {
+        params: {
+          status: filter,
+          sortBy: sortBy,
+        },
+      });
       setTodos(response.data);
     } catch (error) {
       console.error('Error fetching todos:', error);
@@ -26,13 +34,13 @@ function Todo() {
   const addTodo = async () => {
     try {
       if (newTodo.title.trim()) {
-        console.log('Adding todo:', newTodo);
         const response = await axios.post('http://localhost:5001/api/todos', newTodo);
         setTodos([...todos, response.data]);
         setNewTodo({
           title: '',
           description: '',
           dueDate: '',
+          expiration: '',
           priority: 'Medium',
         });
       }
@@ -40,7 +48,6 @@ function Todo() {
       console.error('Error adding todo:', error);
     }
   };
-  
 
   // Function to delete a todo
   const deleteTodo = async (id) => {
@@ -52,13 +59,25 @@ function Todo() {
     }
   };
 
-  // Fetch todos when component mounts
+  // Function to mark a todo as completed
+  const markAsCompleted = async (id) => {
+    try {
+      await axios.patch(`http://localhost:5001/api/todos/${id}/complete`);
+      setTodos(todos.map(todo => 
+        todo.id === id ? { ...todo, completed: true } : todo
+      ));
+    } catch (error) {
+      console.error('Error marking todo as completed:', error);
+    }
+  };
+
+  // Fetch todos when component mounts or filter/sort changes
   useEffect(() => {
     fetchTodos();
-  }, []); // Empty dependency array to run once on component mount
+  }, [filter, sortBy]);
 
   return (
-    <div>
+    <div data-testid="todo-1">
       <h1>Todo List</h1>
       <div>
         <input
@@ -77,6 +96,12 @@ function Todo() {
           value={newTodo.dueDate}
           onChange={(e) => setNewTodo({ ...newTodo, dueDate: e.target.value })}
         />
+        <input
+          type="datetime-local"
+          placeholder="Expiration Date"
+          value={newTodo.expiration}
+          onChange={(e) => setNewTodo({ ...newTodo, expiration: e.target.value })}
+        />
         <select
           value={newTodo.priority}
           onChange={(e) => setNewTodo({ ...newTodo, priority: e.target.value })}
@@ -87,7 +112,22 @@ function Todo() {
         </select>
         <button onClick={addTodo}>Add Todo</button>
       </div>
-      <TodoList todos={todos} deleteTodo={deleteTodo} />
+
+      <h1> My Tasks </h1>
+      <div>
+        <label>Filter by Status</label>
+        <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+          <option value="all">All</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+        </select>
+        <label>Sort by</label>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <option value="dueDate">Due Date</option>
+          <option value="priority">Priority</option>
+        </select>
+      </div>
+      <TodoList todos={todos} deleteTodo={deleteTodo} markAsCompleted={markAsCompleted} />
     </div>
   );
 }
