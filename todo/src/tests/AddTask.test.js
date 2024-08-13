@@ -1,6 +1,6 @@
-// __tests__/AddTask.test.js
-import { render, screen, fireEvent } from '@testing-library/react';
-import AddTask from '../components/AddTask'; // Adjust the import based on your file structure
+//tests/AddTask.test.js
+import { render, screen, fireEvent,  } from '@testing-library/react';
+import AddTask from '../components/AddTask'; 
 
 describe('AddTask Component', () => {
   test('renders title input and allows input', () => {
@@ -48,4 +48,6 @@ describe('AddTask Component', () => {
     fireEvent.change(prioritySelect, { target: { value: 'High' } });
     expect(prioritySelect.value).toBe('High');
   });
+  
 });
+

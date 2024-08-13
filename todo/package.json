@@ -4,9 +4,11 @@
   "private": true,
   "dependencies": {
     "@testing-library/user-event": "^13.5.0",
+    "express": "^4.19.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
+    "sqlite3": "^5.1.7",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -38,5 +40,10 @@
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
     "jest": "^27.5.1"
-  }
+  },
+  "description": "## Overview This is a to-do application built with React and SQLite. The application allows users to manage their tasks with features like adding, editing, deleting, and viewing tasks. Users can also set task priorities and due dates, and receive notifications.",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
