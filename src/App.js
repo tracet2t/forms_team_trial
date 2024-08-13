@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import TodoList from './components/TodoList';
-import './App.css';
-import Todo from './components/Todo'
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import Login from './Login';
+import Todo from './Todo';
 
 function App() {
- 
   return (
-    <div>
-      <Todo/>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/todo" element={<Todo />} />
+        <Route path="*" element={<Navigate to="/login" />} /> {/* Redirect unknown routes to login */}
+      </Routes>
+    </Router>
   );
 }
 

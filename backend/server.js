@@ -13,7 +13,6 @@ app.use(cors());
 
 // Initialize database tables if they don't exist
 db.serialize(() => {
-  // Create the todos table with various fields including an expiration date
   db.run(`CREATE TABLE IF NOT EXISTS todos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
@@ -24,7 +23,6 @@ db.serialize(() => {
     completed INTEGER DEFAULT 0
   )`);
 
-  // Create the notifications table to track which todos have been notified
   db.run(`CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     todoId INTEGER,
@@ -75,10 +73,8 @@ cron.schedule('*/10 * * * *', () => {
       return;
     }
 
-    // Send an email for each upcoming task
     todos.forEach(todo => {
       sendNotificationEmail(todo); 
-      // Record the notification in the database
       db.run('INSERT INTO notifications (todoId, notifiedAt) VALUES (?, ?)', [todo.id, now.toISOString()], (err) => {
         if (err) {
           console.error('Error inserting notification record:', err); 
@@ -90,7 +86,7 @@ cron.schedule('*/10 * * * *', () => {
 
 // Route to get all todos, with optional filtering and sorting
 app.get('/api/todos', (req, res) => {
-  const { status, sortBy } = req.query;
+  const { status, sortBy, search } = req.query;
 
   let query = 'SELECT * FROM todos';
   const params = [];
@@ -102,6 +98,14 @@ app.get('/api/todos', (req, res) => {
     } else if (status === 'pending') {
       query += ' WHERE completed = 0';
     }
+  }
+
+  // Add search functionality
+  if (search) {
+    const searchTerm = `%${search}%`;
+    query += (query.includes('WHERE') ? ' AND ' : ' WHERE ') + 
+             '(title LIKE ? OR description LIKE ?)';
+    params.push(searchTerm, searchTerm);
   }
 
   // Add sorting if specified
@@ -131,9 +135,8 @@ app.get('/api/todos/:id', (req, res) => {
     if (!row) {
       return res.status(404).send('Todo not found'); 
     }
-    // Convert completed to boolean for consistency
     row.completed = row.completed === 1;
-    res.json(row); // Return the todo in JSON format
+    res.json(row); 
   });
 });
 
@@ -151,7 +154,7 @@ app.post('/api/todos', (req, res) => {
       if (err) {
         return res.status(500).send('Error adding todo'); 
       }
-      res.json({ id: this.lastID, title, description, dueDate, priority, expiration, completed: false }); // Return the new todo
+      res.json({ id: this.lastID, title, description, dueDate, priority, expiration, completed: false }); 
   });
 });
 
@@ -182,11 +185,50 @@ app.patch('/api/todos/:id/complete', (req, res) => {
     res.status(200).send('Todo marked as completed'); 
   });
 });
-/*
+
+app.get('/api/todos', (req, res) => {
+  const { status, sortBy, search } = req.query;
+
+  let query = 'SELECT * FROM todos';
+  const params = [];
+
+  // Add filtering by status if specified
+  if (status) {
+    if (status === 'completed') {
+      query += ' WHERE completed = 1';
+    } else if (status === 'pending') {
+      query += ' WHERE completed = 0';
+    }
+  }
+
+  // Add search if specified
+  if (search) {
+    query += (query.includes('WHERE') ? ' AND ' : ' WHERE ') + '(title LIKE ? OR description LIKE ?)';
+    params.push(`%${search}%`, `%${search}%`);
+  }
+
+  // Add sorting if specified
+  if (sortBy) {
+    if (sortBy === 'dueDate') {
+      query += ' ORDER BY dueDate';
+    } else if (sortBy === 'priority') {
+      query += ' ORDER BY priority';
+    }
+  }
+
+  db.all(query, params, (err, rows) => {
+    if (err) {
+      return res.status(500).send('Error fetching todos'); 
+    }
+    res.json(rows); 
+  });
+});
+
+
 // Start the server
-const PORT = 5001;
+const PORT = 5000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`); 
 });
-*/
-module.exports = { app, db }; 
+
+module.exports = { app, db };

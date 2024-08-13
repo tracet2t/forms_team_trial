@@ -7,7 +7,9 @@ beforeAll((done) => {
     // Create the todos table if it doesn't exist
     db.run('CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, description TEXT, dueDate TEXT, priority TEXT, expiration TEXT, completed INTEGER DEFAULT 0)', () => {
       // Insert a test todo item
-      db.run('INSERT INTO todos (title, description, dueDate, priority, expiration) VALUES (?, ?, ?, ?, ?)', ['Test Todo', 'Test Description', '2024-08-31', 'High', '2024-08-30T23:59:59'], done);
+      db.run('INSERT INTO todos (title, description, dueDate, priority, expiration) VALUES (?, ?, ?, ?, ?)', ['Test Todo 1', 'Test Description 1', '2024-08-31', 'High', '2024-08-30T23:59:59'], done);
+      db.run('INSERT INTO todos (title, description, dueDate, priority, expiration) VALUES (?, ?, ?, ?, ?)', ['Test Todo 1', 'Test Description 1', '2024-08-31', 'High', '2024-08-30T23:59:59']);
+      db.run('INSERT INTO todos (title, description, dueDate, priority, expiration) VALUES (?, ?, ?, ?, ?)', ['Test Todo 2', 'Test Description 2', '2024-09-01', 'Medium', '2024-08-30T23:59:59']);
     });
   });
 });
@@ -21,6 +23,50 @@ afterAll((done) => {
     });
   });
 });
+
+
+// Test suite for GET /api/todos with search functionality
+describe('GET /api/todos with search', () => {
+  it('should return todos that match the search term in title', async () => {
+    const response = await request(app)
+      .get('/api/todos')
+      .query({ search: 'Test Todo 1' });
+
+    // Assert that the response status is 200 and the correct todos are returned
+    expect(response.statusCode).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+    expect(response.body.length).toBeGreaterThan(0);
+    response.body.forEach(todo => {
+      expect(todo.title).toContain('Test Todo 1');
+    });
+  });
+
+  it('should return todos that match the search term in description', async () => {
+    const response = await request(app)
+      .get('/api/todos')
+      .query({ search: 'Test Description 2' });
+
+    // Assert that the response status is 200 and the correct todos are returned
+    expect(response.statusCode).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+    expect(response.body.length).toBeGreaterThan(0);
+    response.body.forEach(todo => {
+      expect(todo.description).toContain('Test Description 2');
+    });
+  });
+
+  it('should return an empty array if no todos match the search term', async () => {
+    const response = await request(app)
+      .get('/api/todos')
+      .query({ search: 'Nonexistent Todo' });
+
+    // Assert that the response status is 200 and the result is an empty array
+    expect(response.statusCode).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+    expect(response.body.length).toBe(0);
+  });
+});
+
 
 // Test suite for POST /api/todos
 describe('POST /api/todos', () => {

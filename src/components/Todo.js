@@ -14,14 +14,16 @@ function Todo() {
   });
   const [filter, setFilter] = useState('all'); // Filter by status: 'all', 'completed', 'pending'
   const [sortBy, setSortBy] = useState('dueDate'); // Sort by 'dueDate' or 'priority'
+  const [searchTerm, setSearchTerm] = useState(''); // Search term state
 
-  // Function to fetch all todos with filtering and sorting
+  // Function to fetch all todos with filtering, sorting, and searching
   const fetchTodos = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/todos', {
+      const response = await axios.get('http://localhost:5000/api/todos', {
         params: {
           status: filter,
           sortBy: sortBy,
+          search: searchTerm, // Include the search term
         },
       });
       setTodos(response.data);
@@ -34,7 +36,7 @@ function Todo() {
   const addTodo = async () => {
     try {
       if (newTodo.title.trim()) {
-        const response = await axios.post('http://localhost:5001/api/todos', newTodo);
+        const response = await axios.post('http://localhost:5000/api/todos', newTodo);
         setTodos([...todos, response.data]);
         setNewTodo({
           title: '',
@@ -52,7 +54,7 @@ function Todo() {
   // Function to delete a todo
   const deleteTodo = async (id) => {
     try {
-      await axios.delete(`http://localhost:5001/api/todos/${id}`);
+      await axios.delete(`http://localhost:5000/api/todos/${id}`);
       setTodos(todos.filter((todo) => todo.id !== id));
     } catch (error) {
       console.error('Error deleting todo:', error);
@@ -62,7 +64,7 @@ function Todo() {
   // Function to mark a todo as completed
   const markAsCompleted = async (id) => {
     try {
-      await axios.patch(`http://localhost:5001/api/todos/${id}/complete`);
+      await axios.patch(`http://localhost:5000/api/todos/${id}/complete`);
       setTodos(todos.map(todo => 
         todo.id === id ? { ...todo, completed: true } : todo
       ));
@@ -71,10 +73,10 @@ function Todo() {
     }
   };
 
-  // Fetch todos when component mounts or filter/sort changes
+  // Fetch todos when component mounts or filter/sort/search changes
   useEffect(() => {
     fetchTodos();
-  }, [filter, sortBy]);
+  }, [filter, sortBy, searchTerm]);
 
   return (
     <div data-testid="todo-1">
@@ -114,6 +116,13 @@ function Todo() {
       </div>
 
       <h1> My Tasks </h1>
+      <label>Search Your Task</label>
+      <input
+          type="text"
+          placeholder="Search todos"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       <div>
         <label>Filter by Status</label>
         <select value={filter} onChange={(e) => setFilter(e.target.value)}>
