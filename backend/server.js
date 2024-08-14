@@ -33,6 +33,6 @@ app.get("/", (req, res) => {
 });
 
 // Start the server on port 8083 (update log message to reflect the correct port)
-app.listen(8083, () => {
+app.listen(8084, () => {
     console.log('Listening on port 8083');
 });
