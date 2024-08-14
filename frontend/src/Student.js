@@ -3,11 +3,12 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 
+
 function Student() {
     const [students, setStudents] = useState([]);
 
     useEffect(() => {
-        axios.get('http://localhost:8084/')
+        axios.get('http://localhost:8085/')
             .then(res => {
                 console.log('API Response:', res.data);
 
@@ -25,12 +26,11 @@ function Student() {
     }, []);
 
     const handleUpdate = (id) => {
-        // Implement the update logic here
         console.log('Update student with ID:', id);
     };
 
     const handleDelete = (id) => {
-        // Implement the delete logic here
+        
         console.log('Delete student with ID:', id);
     };
 
