@@ -1,33 +1,25 @@
-import React from 'react'
+import React from 'react';
+import './Create.css'; 
 
 function Create() {
-  return (
-    
-         <div className='d-flex vh-100 bg-primary justify-content-center align-items-center'>
-            <div className='w-75 bg-white rounded p-3'>
+    return (
+        <div className='container'>
+            <div className='form-container'>
                 <form>
-                    <h2>Add member </h2>
-                <div className = 'mb-2'>
-                    <label htmlFor="">Name</label>
-                    <input type ="text" placeholder='enter name' className='form'/>
-                </div>
-                <div className = 'mb-2'>
-                <label htmlFor="">E-mail</label>
-                    <input type ="text" placeholder='enter e-mail' className='form'/>
-                </div>
-                <button className = 'btn btn-success'>Submit</button>
-
-                
-    
-
+                    <h2>Add Member</h2>
+                    <div className='form-group'>
+                        <label htmlFor="name">Name</label>
+                        <input type="text" id="name" placeholder='Enter name' />
+                    </div>
+                    <div className='form-group'>
+                        <label htmlFor="email">E-mail</label>
+                        <input type="text" id="email" placeholder='Enter e-mail' />
+                    </div>
+                    <button className='btn-submit'>Submit</button>
                 </form>
-              
-              
-                </div>
-        
-    </div>
-  )
+            </div>
+        </div>
+    );
 }
-
 
 export default Create;

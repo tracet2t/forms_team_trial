@@ -1,0 +1,40 @@
+
+.container {
+    display: flex;
+    height: 100vh;
+    background-color: #007bff;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-container {
+    width: 75%;
+    background-color: #fff;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+}
+
+.btn-submit {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
