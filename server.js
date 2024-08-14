@@ -39,7 +39,6 @@ db.serialize(() => {
 // Endpoint to add a new task
 app.post('/tasks', (req, res) => {
     const { title, description, dueDate, priority } = req.body;
-
     const stmt = db.prepare("INSERT INTO tasks (title, description, dueDate, priority) VALUES (?, ?, ?, ?)");
     stmt.run(title, description, dueDate, priority, function (err) {
         if (err) {
