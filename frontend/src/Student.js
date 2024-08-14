@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-
-
+import './Student.css'; // Import the CSS file
 
 function Student() {
     const [students, setStudents] = useState([]);
@@ -30,14 +29,13 @@ function Student() {
     };
 
     const handleDelete = (id) => {
-        
         console.log('Delete student with ID:', id);
     };
 
     return (
-        <div className='d-flex vh-100 bg-primary justify-content-center align-items-center'>
-            <div className='w-75 bg-white rounded p-3'>
-                <Link to ="/create"  className='btn btn-success mb-3'>Add</Link>
+        <div className='container'>
+            <div className='table-container'>
+                <Link to="/create" className='btn button-add'>Add</Link>
                 <table className='table'>
                     <thead>
                         <tr>
@@ -56,13 +54,13 @@ function Student() {
                                     <td>{student.email}</td>
                                     <td>
                                         <button
-                                            className='btn btn-primary me-2'
+                                            className='btn button-update'
                                             onClick={() => handleUpdate(student.ID)}
                                         >
                                             Update
                                         </button>
                                         <button
-                                            className='btn btn-danger'
+                                            className='btn button-delete'
                                             onClick={() => handleDelete(student.ID)}
                                         >
                                             Delete
@@ -72,7 +70,7 @@ function Student() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="4">No students available</td>
+                                <td colSpan="4" className='no-students'>No students available</td>
                             </tr>
                         )}
                     </tbody>

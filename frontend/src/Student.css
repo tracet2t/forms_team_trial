@@ -1,0 +1,37 @@
+/* Student.css */
+.container {
+    display: flex;
+    height: 100vh;
+    background-color: #007bff;
+    justify-content: center;
+    align-items: center;
+}
+
+.table-container {
+    width: 75%;
+    background-color: #fff;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.button-add {
+    background-color: #28a745;
+    color: #fff;
+    margin-bottom: 1rem;
+}
+
+.button-update {
+    background-color: #007bff;
+    color: #fff;
+    margin-right: 0.5rem;
+}
+
+.button-delete {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.no-students {
+    text-align: center;
+    font-style: italic;
+}
