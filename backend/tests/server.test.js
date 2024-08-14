@@ -272,3 +272,114 @@ describe('PATCH /api/todos/:id/complete', () => {
     expect(response.text).toBe('Error updating todo');
   });
 });
+
+beforeAll((done) => {
+  db.serialize(() => {
+    db.run('DROP TABLE IF EXISTS users', () => {
+      db.run('CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, password TEXT NOT NULL)', done);
+    });
+  });
+});
+
+
+
+
+
+// Test suite for POST /api/register
+describe('POST /api/register', () => {
+  it('should register a new user', async () => {
+    const newUser = {
+      name: 'testuser',
+      password: 'testpassword'
+    };
+
+    const response = await request(app)
+      .post('/api/register')
+      .send(newUser);
+
+    // Assert that the response status is 200 and the user is registered successfully
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Registration successful.');
+  });
+
+  it('should return 400 if name or password is missing', async () => {
+    const newUser = {
+      name: 'testuser',
+      pasword:''
+    };
+
+    const response = await request(app)
+      .post('/api/register')
+      .send(newUser);
+
+    // Assert that the response status is 400 and the error message is correct
+    expect(response.statusCode).toBe(400);
+    expect(response.text).toBe("\"Name and password are required\"");
+  });
+});
+
+describe('POST /api/login', () => {
+  beforeEach((done) => {
+    db.serialize(() => {
+      db.run('DELETE FROM users WHERE name = ?', ['testuser'], () => {
+        db.run('INSERT INTO users (name, password) VALUES (?, ?)', ['testuser', 'testpassword'], done);
+      });
+    });
+  });
+
+  it('should log in an existing user with correct credentials', async () => {
+    const user = {
+      name: 'testuser',
+      password: 'testpassword'
+    };
+
+    const response = await request(app)
+      .post('/api/login')
+      .send(user);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Login successful.');
+  });
+
+  it('should return 400 if name or password is missing', async () => {
+    const user = {
+      name: 'testuser',
+      password: ''
+    };
+
+    const response = await request(app)
+      .post('/api/login')
+      .send(user);
+
+    expect(response.statusCode).toBe(400);
+    expect(response.text).toBe("{\"error\":\"Name and password are required.\"}");
+  });
+
+  it('should return 401 if the password is incorrect', async () => {
+    const user = {
+      name: 'testuser',
+      password: 'wrongpassword'
+    };
+
+    const response = await request(app)
+      .post('/api/login')
+      .send(user);
+
+    expect(response.statusCode).toBe(401);
+    expect(response.text).toBe("{\"error\":\"Invalid name or password.\"}");
+  });
+
+  it('should return 401 if the user does not exist', async () => {
+    const user = {
+      name: 'nonexistentuser',
+      password: 'testpassword'
+    };
+
+    const response = await request(app)
+      .post('/api/login')
+      .send(user);
+
+    expect(response.statusCode).toBe(401);
+    expect(response.text).toBe("{\"error\":\"Invalid name or password.\"}");
+  });
+});

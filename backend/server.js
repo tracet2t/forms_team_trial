@@ -6,7 +6,7 @@ const cron = require('node-cron');
 const nodemailer = require('nodemailer'); 
 
 const app = express(); 
-const db = new sqlite3.Database('./db.sqlite'); 
+const db = new sqlite3.Database('./new.sqlite'); 
 
 app.use(bodyParser.json()); 
 app.use(cors()); 
@@ -28,6 +28,12 @@ db.serialize(() => {
     todoId INTEGER,
     notifiedAt DATETIME,
     FOREIGN KEY (todoId) REFERENCES todos(id)
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
   )`);
 });
 
@@ -81,6 +87,43 @@ cron.schedule('*/10 * * * *', () => {
         }
       });
     });
+  });
+});
+
+// Register a new user
+app.post('/api/register', (req, res) => {
+  const { name, password } = req.body;
+
+  if (!name || !password) {
+    return res.status(400).json("Name and password are required" );
+  }
+
+  db.run('INSERT INTO users (name, password) VALUES (?, ?)', [name, password], function(err) {
+    if (err) {
+      console.error('Error registering user:', err);
+      return res.status(500).json({ error: 'Failed to register.' });
+    }
+    res.status(200).json({ message: 'Registration successful.' });
+  });
+});
+
+// Login user
+app.post('/api/login', (req, res) => {
+  const { name, password } = req.body;
+
+  if (!name || !password) {
+    return res.status(400).json({ error: 'Name and password are required.' });
+  }
+
+  db.get('SELECT * FROM users WHERE name = ? AND password = ?', [name, password], (err, row) => {
+    if (err) {
+      console.error('Error logging in:', err);
+      return res.status(500).json({ error: 'Failed to login.' });
+    }
+    if (!row) {
+      return res.status(401).json({ error: 'Invalid name or password.' });
+    }
+    res.status(200).json({ message: 'Login successful.' });
   });
 });
 
@@ -185,50 +228,11 @@ app.patch('/api/todos/:id/complete', (req, res) => {
     res.status(200).send('Todo marked as completed'); 
   });
 });
-
-app.get('/api/todos', (req, res) => {
-  const { status, sortBy, search } = req.query;
-
-  let query = 'SELECT * FROM todos';
-  const params = [];
-
-  // Add filtering by status if specified
-  if (status) {
-    if (status === 'completed') {
-      query += ' WHERE completed = 1';
-    } else if (status === 'pending') {
-      query += ' WHERE completed = 0';
-    }
-  }
-
-  // Add search if specified
-  if (search) {
-    query += (query.includes('WHERE') ? ' AND ' : ' WHERE ') + '(title LIKE ? OR description LIKE ?)';
-    params.push(`%${search}%`, `%${search}%`);
-  }
-
-  // Add sorting if specified
-  if (sortBy) {
-    if (sortBy === 'dueDate') {
-      query += ' ORDER BY dueDate';
-    } else if (sortBy === 'priority') {
-      query += ' ORDER BY priority';
-    }
-  }
-
-  db.all(query, params, (err, rows) => {
-    if (err) {
-      return res.status(500).send('Error fetching todos'); 
-    }
-    res.json(rows); 
-  });
-});
-
-
+/*
 // Start the server
 const PORT = 5000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`); 
 });
-
+*/
 module.exports = { app, db };
