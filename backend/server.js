@@ -1,10 +1,11 @@
 const express = require("express");
-const app = express();
 const cors = require("cors");
 const mysql = require("mysql");
 
-app.use(cors());
+const app = express();
 
+app.use(cors()); 
+app.use(express.json()); 
 
 const db = mysql.createConnection({
     host: "localhost",
@@ -12,7 +13,6 @@ const db = mysql.createConnection({
     password: "Kani_0203", 
     database: "todolist_db"
 });
-
 
 db.connect((err) => {
     if (err) {
@@ -33,6 +33,7 @@ app.get("/", (req, res) => {
 });
 
 
-app.listen(8084, () => {
-    console.log('Listening on port 8083');
+const PORT = process.env.PORT || 8084;
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
