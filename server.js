@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000; 
 
 // Middleware setup
 app.use(cors());
@@ -117,16 +117,20 @@ app.delete('/tasks/:id', (req, res) => {
 // Endpoint to mark a task as completed
 app.patch('/tasks/:id/completed', (req, res) => {
     const id = req.params.id;
+    console.log(`Attempting to mark task ${id} as complete...`); // Debug log
     db.run("UPDATE tasks SET completed = 1 WHERE id = ?", [id], function(err) {
         if (err) {
             console.error('Error updating task completion:', err.message);
             return res.status(500).json({ error: err.message });
         }
+        console.log(`Task ${id} marked as complete.`); // Debug log
         res.status(200).json({ id, completed: true });
     });
 });
 
 
+
+// Gracefully shut down and close database
 // Gracefully shut down and close database
 process.on('SIGINT', () => {
     db.close((err) => {
@@ -142,6 +146,8 @@ process.on('SIGINT', () => {
 // Export the app for testing
 module.exports = app;
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-});
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`Server running at http://localhost:${port}`);
+    });
+}
