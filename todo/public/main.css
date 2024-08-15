@@ -37,14 +37,14 @@ input[type="text"], textarea, select {
 button {
     padding: 10px;
     border: none;
-    background-color: #28a745;
+    background-color: #670a6f;
     color: #fff;
     border-radius: 4px;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #218838;
+    background-color: #670a6f;
 }
 
 #List {
