@@ -1,0 +1,28 @@
+.Task {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .Task.completed {
+    text-decoration: line-through;
+    color: #777;
+  }
+  
+  .Task button {
+    background-color: #ffc107;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+  }
+  
+  .Task button.delete {
+    background-color: #dc3545;
+  }
+  
