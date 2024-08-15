@@ -6,7 +6,7 @@ const cron = require('node-cron');
 const nodemailer = require('nodemailer'); 
 
 const app = express(); 
-const db = new sqlite3.Database('./new.sqlite'); 
+const db = new sqlite3.Database('./newdbset.sqlite'); 
 
 app.use(bodyParser.json()); 
 app.use(cors()); 
@@ -20,7 +20,9 @@ db.serialize(() => {
     dueDate TEXT,
     priority TEXT,
     expiration TEXT,
-    completed INTEGER DEFAULT 0
+    completed INTEGER DEFAULT 0,
+    userId INTEGER,
+    FOREIGN KEY (userId) REFERENCES users(id)
   )`);
 
   db.run(`CREATE TABLE IF NOT EXISTS notifications (
@@ -36,6 +38,7 @@ db.serialize(() => {
     password TEXT NOT NULL
   )`);
 });
+
 
 // Configure the email transporter for sending notifications
 const transporter = nodemailer.createTransport({
@@ -90,22 +93,42 @@ cron.schedule('*/10 * * * *', () => {
   });
 });
 
+const bcrypt = require('bcrypt');
+const saltRounds = 10; // Number of salt rounds for bcrypt
+
 // Register a new user
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const { name, password } = req.body;
 
+  // Check if name and password are provided
   if (!name || !password) {
-    return res.status(400).json("Name and password are required" );
+    return res.status(400).json("Name and password are required");
   }
 
-  db.run('INSERT INTO users (name, password) VALUES (?, ?)', [name, password], function(err) {
-    if (err) {
-      console.error('Error registering user:', err);
-      return res.status(500).json({ error: 'Failed to register.' });
-    }
-    res.status(200).json({ message: 'Registration successful.' });
-  });
+  // Password complexity validation (at least one uppercase, one lowercase, one number, and one special character)
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json("Password must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters.");
+  }
+
+  try {
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Insert the new user into the database with the hashed password
+    db.run('INSERT INTO users (name, password) VALUES (?, ?)', [name, hashedPassword], function(err) {
+      if (err) {
+        console.error('Error registering user:', err);
+        return res.status(500).json({ error: 'Failed to register.' });
+      }
+      res.status(200).json({ message: 'Registration successful.' });
+    });
+  } catch (error) {
+    console.error('Error hashing password:', error);
+    res.status(500).json({ error: 'Failed to register.' });
+  }
 });
+
 
 // Login user
 app.post('/api/login', (req, res) => {
@@ -115,7 +138,7 @@ app.post('/api/login', (req, res) => {
     return res.status(400).json({ error: 'Name and password are required.' });
   }
 
-  db.get('SELECT * FROM users WHERE name = ? AND password = ?', [name, password], (err, row) => {
+  db.get('SELECT * FROM users WHERE name = ?', [name], (err, row) => {
     if (err) {
       console.error('Error logging in:', err);
       return res.status(500).json({ error: 'Failed to login.' });
@@ -123,7 +146,22 @@ app.post('/api/login', (req, res) => {
     if (!row) {
       return res.status(401).json({ error: 'Invalid name or password.' });
     }
-    res.status(200).json({ message: 'Login successful.' });
+
+    // Compare the provided password with the hashed password stored in the database
+    bcrypt.compare(password, row.password, (err, result) => {
+      if (err) {
+        console.error('Error comparing passwords:', err);
+        return res.status(500).json({ error: 'Failed to login.' });
+      }
+
+      if (result) {
+        // Passwords match
+        res.status(200).json({ message: 'Login successful.' });
+      } else {
+        // Passwords don't match
+        res.status(401).json({ error: 'Invalid name or password.' });
+      }
+    });
   });
 });
 
@@ -228,11 +266,62 @@ app.patch('/api/todos/:id/complete', (req, res) => {
     res.status(200).send('Todo marked as completed'); 
   });
 });
-/*
+
+// Route to edit an existing todo by its ID
+app.put('/api/todos/:id', (req, res) => {
+  const { id } = req.params;
+  const { title, description, dueDate, expiration, priority } = req.body;
+
+  // Check if at least one field is provided for update
+  if (!title && !description && !dueDate && !expiration && !priority) {
+    return res.status(400).send('At least one field is required for update');
+  }
+
+  // Construct the SQL query dynamically based on provided fields
+  let query = 'UPDATE todos SET';
+  const params = [];
+
+  if (title) {
+    query += ' title = ?,';
+    params.push(title);
+  }
+  if (description) {
+    query += ' description = ?,';
+    params.push(description);
+  }
+  if (dueDate) {
+    query += ' dueDate = ?,';
+    params.push(dueDate);
+  }
+  if (expiration) {
+    query += ' expiration = ?,';
+    params.push(expiration);
+  }
+  if (priority) {
+    query += ' priority = ?,';
+    params.push(priority);
+  }
+
+  // Remove the trailing comma and add the WHERE clause
+  query = query.slice(0, -1);
+  query += ' WHERE id = ?';
+  params.push(id);
+
+  db.run(query, params, function (err) {
+    if (err) {
+      return res.status(500).send('Error updating todo');
+    }
+    if (this.changes === 0) {
+      return res.status(404).send('Todo not found');
+    }
+    res.status(200).send('Todo updated successfully');
+  });
+});
+
 // Start the server
 const PORT = 5000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`); 
 });
-*/
+
 module.exports = { app, db };

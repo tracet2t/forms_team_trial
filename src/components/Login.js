@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Login.css';  // Import the CSS file
 
-function Login() {
+function Login({ onLoginSuccess }) {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
@@ -12,7 +12,9 @@ function Login() {
     try {
       // Send the name and password to the server
       await axios.post('http://localhost:5000/api/login', { name, password });
-      // Navigate to the TODO page on successful login
+      // Set authentication state on successful login
+      onLoginSuccess();
+      // Navigate to the TODO page
       navigate('/todo');
     } catch (error) {
       console.error('Login failed:', error);

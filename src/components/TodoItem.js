@@ -1,7 +1,7 @@
 import React from 'react';
 import './Todo.css';
 
-function TodoItem({ todo, deleteTodo, markAsCompleted }) {
+function TodoItem({ todo, deleteTodo, markAsCompleted, startEditing }) {
   return (
     <li>
       <div>
@@ -29,7 +29,12 @@ function TodoItem({ todo, deleteTodo, markAsCompleted }) {
         <strong>Status:</strong> {todo.completed ? 'Completed' : 'Not Completed'}
       </div>
       <button onClick={() => deleteTodo(todo.id)}>Delete</button>
-      {!todo.completed && <button onClick={() => markAsCompleted(todo.id)}>Mark as Completed</button>}
+      {!todo.completed && (
+        <>
+          <button onClick={() => markAsCompleted(todo.id)}>Mark as Completed</button>
+          <button onClick={() => startEditing(todo)}>Edit</button>
+        </>
+      )}
     </li>
   );
 }

@@ -15,9 +15,17 @@ function Register() {
       // Redirect to the login page after successful registration
       navigate('/login');
     } catch (error) {
-      console.error('Registration failed:', error);
+      if (error.response && error.response.data) {
+        // Handle specific error messages from the server, such as password complexity issues
+        console.error('Registration failed:', error.response.data);
+        alert(`Registration failed: ${error.response.data}`);
+      } else {
+        console.error('Registration failed:', error);
+        alert('Registration failed. Please try again.');
+      }
     }
   };
+  
 
   return (
     <div className="register-container">

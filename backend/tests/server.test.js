@@ -273,6 +273,122 @@ describe('PATCH /api/todos/:id/complete', () => {
   });
 });
 
+// Test suite for PUT /api/todos/:id
+describe('PUT /api/todos/:id', () => {
+  let originalRun;
+
+  beforeEach(() => {
+    // Backup the original db.run method
+    originalRun = db.run;
+  });
+
+  afterEach(() => {
+    // Restore the original db.run method
+    db.run = originalRun;
+  });
+
+  it('should update the title, description, due date, expiration date, and priority of a todo', async () => {
+    const newTodo = {
+      title: 'Initial Task',
+      description: 'Initial description',
+      dueDate: '2024-08-31',
+      priority: 'Low',
+      expiration: '2024-08-30T23:59:59'
+    };
+
+    // Create a new todo and retrieve its ID
+    const postResponse = await request(app)
+      .post('/api/todos')
+      .send(newTodo);
+
+    const { id } = postResponse.body;
+
+    const updatedTodo = {
+      title: 'Updated Task',
+      description: 'Updated description',
+      dueDate: '2024-09-01',
+      priority: 'High',
+      expiration: '2024-09-01T23:59:59'
+    };
+
+    // Update the todo
+    const putResponse = await request(app)
+      .put(`/api/todos/${id}`)
+      .send(updatedTodo);
+
+    // Assert that the response status is 200 and the success message is correct
+    expect(putResponse.statusCode).toBe(200);
+    expect(putResponse.text).toBe('Todo updated successfully');
+
+    // Retrieve the updated todo to verify the changes
+    const getResponse = await request(app)
+      .get(`/api/todos/${id}`);
+
+    // Assert that the todo's properties are updated
+    expect(getResponse.statusCode).toBe(200);
+    expect(getResponse.body.title).toBe(updatedTodo.title);
+    expect(getResponse.body.description).toBe(updatedTodo.description);
+    expect(getResponse.body.dueDate).toBe(updatedTodo.dueDate);
+    expect(getResponse.body.priority).toBe(updatedTodo.priority);
+    expect(getResponse.body.expiration).toBe(updatedTodo.expiration);
+  });
+
+  it('should return 404 if the todo does not exist', async () => {
+    const updatedTodo = {
+      title: 'Non-existent Task',
+      description: 'This task does not exist',
+      dueDate: '2024-09-01',
+      priority: 'High',
+      expiration: '2024-09-01T23:59:59'
+    };
+
+    const response = await request(app)
+      .put('/api/todos/999')
+      .send(updatedTodo);
+
+    // Assert that the response status is 404 and the error message is correct
+    expect(response.statusCode).toBe(404);
+    expect(response.text).toBe('Todo not found');
+  });
+
+  it('should return 500 if there is an error updating the todo', async () => {
+    const newTodo = {
+      title: 'Task with DB Error',
+      description: 'This will cause a DB error',
+      dueDate: '2024-08-31',
+      priority: 'Medium',
+      expiration: '2024-08-30T23:59:59'
+    };
+
+    // Create a new todo and retrieve its ID
+    const postResponse = await request(app)
+      .post('/api/todos')
+      .send(newTodo);
+
+    const { id } = postResponse.body;
+
+    const updatedTodo = {
+      title: 'Updated Task',
+      description: 'Updated description',
+      dueDate: '2024-09-01',
+      priority: 'High',
+      expiration: '2024-09-01T23:59:59'
+    };
+
+    // Simulate a database error
+    db.run = jest.fn((query, params, callback) => callback(new Error('Database error')));
+
+    const response = await request(app)
+      .put(`/api/todos/${id}`)
+      .send(updatedTodo);
+
+    // Assert that the response status is 500 and the error message is correct
+    expect(response.statusCode).toBe(500);
+    expect(response.text).toBe('Error updating todo');
+  });
+});
+
+
 beforeAll((done) => {
   db.serialize(() => {
     db.run('DROP TABLE IF EXISTS users', () => {
@@ -287,10 +403,10 @@ beforeAll((done) => {
 
 // Test suite for POST /api/register
 describe('POST /api/register', () => {
-  it('should register a new user', async () => {
+  it('should register a new user with a valid password', async () => {
     const newUser = {
       name: 'testuser',
-      password: 'testpassword'
+      password: 'ValidPassword1@'
     };
 
     const response = await request(app)
@@ -305,7 +421,7 @@ describe('POST /api/register', () => {
   it('should return 400 if name or password is missing', async () => {
     const newUser = {
       name: 'testuser',
-      pasword:''
+      password: ''
     };
 
     const response = await request(app)
@@ -316,13 +432,38 @@ describe('POST /api/register', () => {
     expect(response.statusCode).toBe(400);
     expect(response.text).toBe("\"Name and password are required\"");
   });
+
+  it('should return 400 if the password does not meet complexity requirements', async () => {
+    const newUser = {
+      name: 'testuser',
+      password: 'weakpass'
+    };
+
+    const response = await request(app)
+      .post('/api/register')
+      .send(newUser);
+
+    // Assert that the response status is 400 and the error message is correct
+    expect(response.statusCode).toBe(400);
+    expect(response.text).toBe( "\"Password must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters.\"");
+  });
 });
 
+
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+// Test suite for POST /api/login
 describe('POST /api/login', () => {
   beforeEach((done) => {
-    db.serialize(() => {
-      db.run('DELETE FROM users WHERE name = ?', ['testuser'], () => {
-        db.run('INSERT INTO users (name, password) VALUES (?, ?)', ['testuser', 'testpassword'], done);
+    const plainPassword = 'testpassword';
+    bcrypt.hash(plainPassword, saltRounds, (err, hashedPassword) => {
+      if (err) throw err;
+
+      db.serialize(() => {
+        db.run('DELETE FROM users WHERE name = ?', ['testuser'], () => {
+          db.run('INSERT INTO users (name, password) VALUES (?, ?)', ['testuser', hashedPassword], done);
+        });
       });
     });
   });

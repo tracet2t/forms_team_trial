@@ -7,7 +7,7 @@ const sendNotificationEmail = (todo) => {
     service: 'gmail',
     auth: {
       user: 'lakshanans1121@gmail.com', 
-      pass: '0779117370Sl@!'  // Consider moving credentials to environment variables
+      pass: '000000000' 
     }
   });
 
