@@ -27,7 +27,8 @@ db.serialize(() => {
             title TEXT,
             description TEXT,
             dueDate TEXT,
-            priority TEXT
+            priority TEXT,
+            completed INTEGER DEFAULT 0
         )
     `, (err) => {
         if (err) {
@@ -39,6 +40,7 @@ db.serialize(() => {
 // Endpoint to add a new task
 app.post('/tasks', (req, res) => {
     const { title, description, dueDate, priority } = req.body;
+
     const stmt = db.prepare("INSERT INTO tasks (title, description, dueDate, priority) VALUES (?, ?, ?, ?)");
     stmt.run(title, description, dueDate, priority, function (err) {
         if (err) {
@@ -59,6 +61,72 @@ app.get('/tasks', (req, res) => {
     });
 });
 
+// Endpoint to get a specific task
+app.get('/tasks/:id', (req, res) => {
+    const id = req.params.id;
+    db.get("SELECT * FROM tasks WHERE id = ?", [id], (err, row) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (row) {
+            res.json(row);
+        } else {
+            res.status(404).json({ error: 'Task not found' });
+        }
+    });
+});
+
+// Endpoint to update a task
+app.put('/tasks/:id', (req, res) => {
+    const taskId = req.params.id;
+    const { title, description, dueDate, priority } = req.body;
+
+    const query = `UPDATE tasks SET title = ?, description = ?, dueDate = ?, priority = ? WHERE id = ?`;
+    const params = [title, description, dueDate, priority, taskId];
+
+    db.run(query, params, function(err) {
+        if (err) {
+            console.error('Error updating task:', err.message);
+            return res.status(500).json({ error: 'Failed to update task' });
+        }
+
+        res.json({
+            id: taskId,
+            title,
+            description,
+            dueDate,
+            priority
+        });
+    });
+});
+
+// Endpoint to delete a task
+app.delete('/tasks/:id', (req, res) => {
+    const id = req.params.id;
+    db.run("DELETE FROM tasks WHERE id = ?", [id], function (err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.status(204).end();
+    });
+});
+
+// Endpoint to mark a task as completed
+app.patch('/tasks/:id/completed', (req, res) => {
+    const id = req.params.id;
+    db.run("UPDATE tasks SET completed = 1 WHERE id = ?", [id], function(err) {
+        if (err) {
+            console.error('Error updating task completion:', err.message);
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(200).json({ id, completed: true });
+    });
+});
+
+
 // Gracefully shut down and close database
 process.on('SIGINT', () => {
     db.close((err) => {
@@ -70,6 +138,9 @@ process.on('SIGINT', () => {
         process.exit(0);
     });
 });
+
+// Export the app for testing
+module.exports = app;
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
