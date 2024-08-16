@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import '../styles/TaskList.css';
 
 const TaskList = ({ tasks, setTasks, fetchTasks }) => {
+  
+  // Function to mark a task as completed
   const markAsCompleted = async (id) => {
     try {
       await fetch(`http://localhost:5000/api/tasks/${id}`, {
@@ -18,6 +20,7 @@ const TaskList = ({ tasks, setTasks, fetchTasks }) => {
     }
   };
 
+  // Function to delete a task
   const deleteTask = async (id) => {
     try {
       await fetch(`http://localhost:5000/api/tasks/${id}`, {
@@ -32,16 +35,20 @@ const TaskList = ({ tasks, setTasks, fetchTasks }) => {
   return (
     <div className="task-list">
       <h1>Task List</h1>
-      <Link to="/add">Add New Task</Link>
+      <Link to="/add" className="add-task-link">Add New Task</Link>
       <ul>
         {tasks.length > 0 ? (
           tasks.map(task => (
-            <li key={task.id}>
-              <h2>{task.title}</h2>
-              <p>{task.description}</p>
-              <button onClick={() => markAsCompleted(task.id)}>Mark as Completed</button>
-              <button onClick={() => deleteTask(task.id)}>Delete</button>
-              <Link to={`/edit/${task.id}`}>Edit</Link>
+            <li key={task.id} className="task-item">
+              <h2 className="task-title">{task.title}</h2>
+              <p className="task-description">{task.description}</p>
+              <button className="mark-completed-button" onClick={() => markAsCompleted(task.id)}>
+                Mark as Completed
+              </button>
+              <button className="delete-button" onClick={() => deleteTask(task.id)}>
+                Delete
+              </button>
+              <Link to={`/edit/${task.id}`} className="edit-link">Edit</Link>
             </li>
           ))
         ) : (
