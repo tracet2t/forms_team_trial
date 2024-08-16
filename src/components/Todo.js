@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom'; 
 import TodoList from './TodoList';
+import Header from './Header'; 
+import Footer from './Footer';
 import './Todo.css';
 
 function Todo() {
@@ -117,9 +119,10 @@ function Todo() {
   }, [filter, sortBy, searchTerm]);
 
   return (
+    
     <div data-testid="todo-1">
       <button onClick={handleLogout} className="logout-button">Logout</button>
-      <div clas="web">
+      <div class="web">
         <h1>Todo List</h1>
         <input
           type="text"
@@ -157,6 +160,7 @@ function Todo() {
         {editMode && <button onClick={() => setEditMode(false)}>Cancel</button>}
       </div>
 
+      <div className='web2'>
       <h1> My Tasks </h1>
       <label>Search Your Task</label>
       <input
@@ -178,12 +182,20 @@ function Todo() {
           <option value="priority">Priority</option>
         </select>
       </div>
-      <TodoList
-        todos={todos}
-        deleteTodo={deleteTodo}
-        markAsCompleted={markAsCompleted}
-        startEditing={startEditing}
-      />
+
+        <ul className='todo-list-container '>
+            <TodoList
+              todos={todos}
+              deleteTodo={deleteTodo}
+              markAsCompleted={markAsCompleted}
+              startEditing={startEditing}
+            />
+          </ul>
+       
+      </div>
+      <div>
+
+      </div>
     </div>
   );
 }

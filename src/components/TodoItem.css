@@ -1,72 +1,109 @@
 .todo-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .todo-details {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-  }
-  
-  .todo-info {
-    flex: 1;
-    margin-right: 20px;
-  }
-  
-  .todo-title,
-  .todo-description,
-  .todo-due-date,
-  .todo-expiration,
-  .todo-priority,
-  .todo-status {
-    margin-bottom: 5px;
-  }
-  
-  .todo-status.completed {
-    color: green;
-  }
-  
-  .todo-status.not-completed {
-    color: red;
-  }
-  
-  .todo-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  button {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .delete-button {
-    background-color: #ff4d4d;
-    color: white;
-  }
-  
-  .delete-button:hover {
-    background-color: #ff1a1a;
-  }
-  
-  .complete-button {
-    background-color: #4caf50;
-    color: white;
-  }
-  
-  .complete-button:hover {
-    background-color: #45a049;
-  }
-  
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.todo-details {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.todo-info {
+  flex: 1;
+  margin-right: 20px;
+}
+
+.todo-title,
+.todo-description,
+.todo-due-date,
+.todo-expiration,
+.todo-priority,
+.todo-status {
+  margin-bottom: 5px;
+}
+
+.todo-status.completed {
+  color: green;
+}
+
+.todo-status.not-completed {
+  color: red;
+}
+
+.todo-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.delete-button {
+  background-color: #ff4d4d;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #ff1a1a;
+}
+
+.complete-button {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+.complete-image {
+  width: 20px;
+  height: 20px;
+}
+
+.edit-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.edit-button:hover {
+  background-color: #0056b3;
+}
+
+/* Add this class to your TodoList container */
+.todo-list-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Two columns */
+  grid-gap: 20px; /* Gap between the items */
+}
+
+/* Styling for individual todo items */
+.todo-list-container li {
+  background-color: #f9f9f9;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Ensure buttons are properly styled */
+.todo-list-container li button {
+  background-color: #1a0406;
+  margin-top: 3px;
+}
+
+.todo-list-container li button:hover {
+  background-color: #c82333;
+}
+
+

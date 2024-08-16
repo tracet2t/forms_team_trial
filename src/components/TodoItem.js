@@ -3,7 +3,8 @@ import './Todo.css';
 
 function TodoItem({ todo, deleteTodo, markAsCompleted, startEditing }) {
   return (
-    <li>
+    <ul className="todo-list-container">
+    <li key={todo.id} >
       <div>
         <strong>Title:</strong> {todo.title}
       </div>
@@ -36,6 +37,7 @@ function TodoItem({ todo, deleteTodo, markAsCompleted, startEditing }) {
         </>
       )}
     </li>
+    </ul>
   );
 }
 
