@@ -1,4 +1,3 @@
-// src/components/AddTask.js
 import React, { useState } from 'react';
 import './AddTask.css';
 
@@ -9,31 +8,52 @@ function AddTask() {
   const [priority, setPriority] = useState('');
   const [error, setError] = useState(''); // To store error messages
 
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (title.trim() === '') {
-      setError();
+      setError('Title is required');
       return;
     }
 
     // Clear the error message if validation passes
     setError('');
 
-     //handle the form submission, such as sending the data to an API or updating the state in a parent component.
-    console.log('Task Submitted:', { title, description, dueDate, priority });
+    // Prepare task data
+    const taskData = { title, description, dueDate, priority };
 
-    // Reset the form after submission
-    setTitle('');
-    setDescription('');
-    setDueDate('');
-    setPriority('');
+    try {
+      // Send POST request to the backend
+      const response = await fetch('http://localhost:3000/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(taskData),
+      });
+
+      if (response.ok) {
+        const newTask = await response.json();
+        console.log('Task Submitted:', newTask);
+
+        // Reset the form after successful submission
+        setTitle('');
+        setDescription('');
+        setDueDate('');
+        setPriority('');
+      } else {
+        // Handle errors from the backend
+        setError('Failed to add task');
+      }
+    } catch (err) {
+      // Handle network or other errors
+      setError('An error occurred while adding the task');
+    }
   };
 
   return (
     <form className="add-task-form" onSubmit={handleSubmit}>       
-    {error && <p style={{ color: 'red' }}>{error}</p>} {/* Display error message */}          
+      {error && <p style={{ color: 'red' }}>{error}</p>} {/* Display error message */}          
       <div>
         <label htmlFor="title">Title</label>
         <input
@@ -64,9 +84,8 @@ function AddTask() {
         />
       </div>
       
-      
-<div>
-      <label htmlFor="priority">Priority</label>
+      <div>
+        <label htmlFor="priority">Priority</label>
         <select
           id="priority"
           value={priority}
