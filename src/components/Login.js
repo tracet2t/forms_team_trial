@@ -30,18 +30,18 @@ function Login({ onLoginSuccess }) {
     <div className="login-container">
       <h1>Login Page</h1>
       <div>
-        <label>Name</label>
         <input
           type="text"
           value={name}
+          placeholder="User Name"
           onChange={(e) => setName(e.target.value)}
         />
       </div>
       <div>
-        <label>Password</label>
         <input
           type="password"
           value={password}
+          placeholder="Password"
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>

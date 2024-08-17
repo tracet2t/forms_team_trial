@@ -318,6 +318,76 @@ app.put('/api/todos/:id', (req, res) => {
   });
 });
 
+//sent notification 
+// SSE endpoint for sending task notifications
+app.get('/api/notifications', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  // Function to send a message to the client
+  const sendNotification = (todo) => {
+    res.write(`data: ${JSON.stringify(todo)}\n\n`);
+  };
+
+  // Check for upcoming tasks every 10 seconds
+  const intervalId = setInterval(() => {
+    const now = new Date();
+    const upcomingTime = new Date(now.getTime() + 10 * 60000); // 10 minutes from now
+
+    db.all(`SELECT * FROM todos
+            WHERE dueDate IS NOT NULL
+            AND completed = 0
+            AND strftime('%Y-%m-%dT%H:%M:%S', dueDate) <= strftime('%Y-%m-%dT%H:%M:%S', ?)
+            AND id NOT IN (SELECT todoId FROM notifications)`, [upcomingTime.toISOString()], (err, todos) => {
+      if (err) {
+        console.error('Error fetching todos for notifications:', err);
+        return;
+      }
+
+      todos.forEach(todo => {
+        sendNotification(todo);
+        db.run('INSERT INTO notifications (todoId, notifiedAt) VALUES (?, ?)', [todo.id, now.toISOString()], (err) => {
+          if (err) {
+            console.error('Error inserting notification record:', err);
+          }
+        });
+      });
+    });
+  }, 10000); // Check every 10 seconds
+
+  // Cleanup interval when client disconnects
+  req.on('close', () => {
+    clearInterval(intervalId);
+    res.end();
+  });
+});
+
+app.get('/api/notifications', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  // Send a notification every 5 seconds
+  const intervalId = setInterval(() => {
+    const notification = {
+      id: new Date().getTime(),
+      title: 'Notification Title',
+      description: 'Notification Description',
+      dueDate: new Date().toISOString(),
+      priority: 'High',
+      expiration: new Date().toISOString(),
+      completed: false
+    };
+    res.write(`data: ${JSON.stringify(notification)}\n\n`);
+  }, 5000);
+
+  // Clean up interval when connection is closed
+  req.on('close', () => {
+    clearInterval(intervalId);
+    res.end();
+  });
+});
 // Start the server
 const PORT = 5000;
 app.listen(PORT, () => {

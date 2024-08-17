@@ -1,28 +1,29 @@
 const request = require('supertest'); // Import supertest for API testing
 const { app, db } = require('../server'); // Import the app and database from the server
+const EventSource = require('eventsource');
 
-// Setup code to run before any tests
 beforeAll((done) => {
   db.serialize(() => {
-    // Create the todos table if it doesn't exist
     db.run('CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, description TEXT, dueDate TEXT, priority TEXT, expiration TEXT, completed INTEGER DEFAULT 0)', () => {
-      // Insert a test todo item
-      db.run('INSERT INTO todos (title, description, dueDate, priority, expiration) VALUES (?, ?, ?, ?, ?)', ['Test Todo 1', 'Test Description 1', '2024-08-31', 'High', '2024-08-30T23:59:59'], done);
-      db.run('INSERT INTO todos (title, description, dueDate, priority, expiration) VALUES (?, ?, ?, ?, ?)', ['Test Todo 1', 'Test Description 1', '2024-08-31', 'High', '2024-08-30T23:59:59']);
-      db.run('INSERT INTO todos (title, description, dueDate, priority, expiration) VALUES (?, ?, ?, ?, ?)', ['Test Todo 2', 'Test Description 2', '2024-09-01', 'Medium', '2024-08-30T23:59:59']);
+      db.run('CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY AUTOINCREMENT, todoId INTEGER, notifiedAt TEXT)', () => {
+        // Insert test data
+        db.run('INSERT INTO todos (title, description, dueDate, priority, expiration) VALUES (?, ?, ?, ?, ?)', ['Test Todo 1', 'Test Description 1', '2024-08-31', 'High', '2024-08-30T23:59:59']);
+        db.run('INSERT INTO todos (title, description, dueDate, priority, expiration) VALUES (?, ?, ?, ?, ?)', ['Test Todo 2', 'Test Description 2', '2024-09-01', 'Medium', '2024-08-30T23:59:59'], done);
+      });
     });
   });
 });
 
-// Cleanup code to run after all tests
 afterAll((done) => {
   db.serialize(() => {
-    // Drop the todos table if it exists
     db.run('DROP TABLE IF EXISTS todos', () => {
-      db.close(done); // Close the database connection
+      db.run('DROP TABLE IF EXISTS notifications', () => {
+        db.close(done);
+      });
     });
   });
 });
+
 
 
 // Test suite for GET /api/todos with search functionality
@@ -522,5 +523,48 @@ describe('POST /api/login', () => {
 
     expect(response.statusCode).toBe(401);
     expect(response.text).toBe("{\"error\":\"Invalid name or password.\"}");
+  });
+});
+
+
+// Test suite for GET /api/notifications
+describe('GET /api/notifications', () => {
+  jest.setTimeout(15000); // Increase timeout for this test
+
+  it('should send notifications for upcoming tasks', (done) => {
+    const es = new EventSource('http://localhost:3000/api/notifications');
+
+    // Set a timeout to end the test if no messages are received
+    const timeout = setTimeout(() => {
+      es.close();
+      done(new Error('Timed out waiting for notifications'));
+    }, 15000);
+
+    es.onmessage = (event) => {
+      clearTimeout(timeout); // Clear timeout on successful message
+
+      try {
+        const todo = JSON.parse(event.data);
+        expect(todo).toHaveProperty('id');
+        expect(todo).toHaveProperty('title');
+        expect(todo).toHaveProperty('description');
+        expect(todo).toHaveProperty('dueDate');
+        expect(todo).toHaveProperty('priority');
+        expect(todo).toHaveProperty('expiration');
+        expect(todo).toHaveProperty('completed');
+
+        es.close();
+        done();
+      } catch (error) {
+        es.close();
+        done(error);
+      }
+    };
+
+    es.onerror = (error) => {
+      clearTimeout(timeout);
+      es.close();
+      done(error);
+    };
   });
 });

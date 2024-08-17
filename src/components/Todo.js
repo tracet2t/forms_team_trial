@@ -5,6 +5,7 @@ import TodoList from './TodoList';
 import Header from './Header'; 
 import Footer from './Footer';
 import './Todo.css';
+import NotificationComponent from './NotificationComponent';
 
 function Todo() {
   const navigate = useNavigate(); // Initialize useNavigate
@@ -121,9 +122,11 @@ function Todo() {
   return (
     
     <div data-testid="todo-1">
+      <div className='head'>TODO APPLICATION</div>
       <button onClick={handleLogout} className="logout-button">Logout</button>
+      
       <div class="web">
-        <h1>Todo List</h1>
+        <h1>Add Task</h1>
         <input
           type="text"
           placeholder="Title"
@@ -135,18 +138,21 @@ function Todo() {
           value={newTodo.description}
           onChange={(e) => setNewTodo({ ...newTodo, description: e.target.value })}
         />
+        <div className='x'>Start Date</div>
         <input
           type="date"
           value={newTodo.dueDate}
           onChange={(e) => setNewTodo({ ...newTodo, dueDate: e.target.value })}
         />
+        <div className='x'>Expiration Date and Time</div>
         <input
           type="datetime-local"
           placeholder="Expiration Date"
           value={newTodo.expiration}
           onChange={(e) => setNewTodo({ ...newTodo, expiration: e.target.value })}
         />
-        <select
+        <div className='x'>Priority</div>
+        <select className='z'
           value={newTodo.priority}
           onChange={(e) => setNewTodo({ ...newTodo, priority: e.target.value })}
         >
@@ -169,34 +175,34 @@ function Todo() {
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
-      <div>
-        <label>Filter by Status</label>
-        <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <option value="all">All</option>
-          <option value="completed">Completed</option>
-          <option value="pending">Pending</option>
-        </select>
-        <label>Sort by</label>
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-          <option value="dueDate">Due Date</option>
-          <option value="priority">Priority</option>
-        </select>
-      </div>
-
-        <ul className='todo-list-container '>
-            <TodoList
-              todos={todos}
-              deleteTodo={deleteTodo}
-              markAsCompleted={markAsCompleted}
-              startEditing={startEditing}
-            />
-          </ul>
+       <div className="filter-sort-container">
+    <label>Filter by Status</label>
+    <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+        <option value="all">All</option>
+        <option value="completed">Completed</option>
+        <option value="pending">Pending</option>
+    </select>
+    <label>Sort by</label>
+    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+        <option value="dueDate">Due Date</option>
+        <option value="priority">Priority</option>
+    </select>
+</div>
+</div>
+<div className='y'>
+    <ul className='todo-list-container '>
+      <TodoList
+        todos={todos}
+        deleteTodo={deleteTodo}
+        markAsCompleted={markAsCompleted}
+        startEditing={startEditing}/>
+    </ul>
+    </div>   
        
-      </div>
+     
       <div>
-
-      </div>
     </div>
+  </div>
   );
 }
 
