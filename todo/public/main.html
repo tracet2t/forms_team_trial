@@ -10,15 +10,12 @@
     <div class="task-container">
         <h1>Create a Task</h1>
         <form id="taskForm">
-            
             <label for="Title">Title:</label>
             <input type="text" id="taskTitle" name="title" required>
             <label for="Description">Description:</label>
             <textarea id="Description" name="description"></textarea>
-
             <label for="DueDate">Due Date:</label>
             <input type="date" id="DueDate" name="due-date">
-
             <label for="Priority">Priority:</label>
             <select id="Priority" name="priority">
                 <option value="">None</option>
@@ -26,8 +23,27 @@
                 <option value="Medium">Medium</option>
                 <option value="Low">Low</option>
             </select>
-
             <button type="submit">Add Task</button>
+        </form>
+
+       
+        <form id="editTaskForm" style="display: none;">
+            <h2>Edit Task</h2>
+            <label for="editTitle">Title:</label>
+            <input type="text" id="editTitle" name="edit-title" required>
+            <label for="editDescription">Description:</label>
+            <textarea id="editDescription" name="edit-description"></textarea>
+            <label for="editDueDate">Due Date:</label>
+            <input type="date" id="editDueDate" name="edit-due-date">
+            <label for="editPriority">Priority:</label>
+            <select id="editPriority" name="edit-priority">
+                <option value="">None</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+            <button type="submit">Save Changes</button>
+            <button type="button" id="cancelEdit">Cancel</button>
         </form>
 
         <div id="List">

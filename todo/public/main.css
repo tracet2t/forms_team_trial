@@ -1,3 +1,4 @@
+/* Existing styles remain the same */
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
@@ -63,4 +64,33 @@ button:hover {
 
 #Items li:last-child {
     border-bottom: none;
+}
+#editTaskForm {
+    margin-top: 20px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+button {
+    padding: 10px;
+    border: none;
+    background-color: #670a6f;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #54085c;
+}
+
+button.edit-btn {
+    background-color: #007bff;
+    margin-right: 5px;
+}
+
+button.edit-btn:hover {
+    background-color: #0056b3;
 }
