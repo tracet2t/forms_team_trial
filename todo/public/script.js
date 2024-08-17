@@ -21,13 +21,17 @@ function displayTasks() {
     itemsList.innerHTML = '';
 
     const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    const currentDate = new Date();
 
     tasks.forEach((task, index) => {
+        const taskDueDate = new Date(task.dueDate);
+        const isExpired = taskDueDate < currentDate ? 'Expired' : '';
+
         const taskItem = document.createElement('li');
         taskItem.innerHTML = `
             <strong>Title:</strong> ${task.title}<br>
             <strong>Description:</strong> ${task.description}<br>
-            <strong>Due Date:</strong> ${task.dueDate}<br>
+            <strong>Due Date:</strong> ${task.dueDate} <span style="color:red">${isExpired}</span><br>
             <strong>Priority:</strong> ${task.priority}<br>
             <button class="edit-btn" onclick="editTask(${index})">Edit</button>
             <button onclick="deleteTask(${index})">Delete</button>
