@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; 
 import TodoList from './TodoList';
-import Header from './Header'; 
-import Footer from './Footer';
 import './Todo.css';
-import NotificationComponent from './NotificationComponent';
 
 function Todo() {
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
   const [todos, setTodos] = useState(() => {
     const savedTodos = localStorage.getItem('todos');
     return savedTodos ? JSON.parse(savedTodos) : [];
@@ -23,63 +20,55 @@ function Todo() {
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('dueDate');
   const [searchTerm, setSearchTerm] = useState('');
-  const [editMode, setEditMode] = useState(false); // Track if we are editing
-  const [editTodoId, setEditTodoId] = useState(null); // Track which todo is being edited
+  const [editMode, setEditMode] = useState(false);
+  const [editTodoId, setEditTodoId] = useState(null);
+  const [notifications, setNotifications] = useState([]); // New state for notifications
 
-  const fetchTodos = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/todos', {
-        params: {
-          status: filter,
-          sortBy: sortBy,
-          search: searchTerm,
-        },
-      });
-      setTodos(response.data);
-      localStorage.setItem('todos', JSON.stringify(response.data));
-    } catch (error) {
-      console.error('Error fetching todos:', error);
-    }
-  };
+// Fetch Todos
+const fetchTodos = async () => {
+  const userId = localStorage.getItem('userId');
+  try {
+    const response = await axios.get('http://localhost:5000/api/todos', {
+      params: {
+        userId, // Pass the userId in the request
+        status: filter,
+        sortBy: sortBy,
+        search: searchTerm,
+      },
+    });
+    setTodos(response.data);
+    localStorage.setItem('todos', JSON.stringify(response.data));
+  } catch (error) {
+    console.error('Error fetching todos:', error);
+  }
+};
 
-  const addOrEditTodo = async () => {
-    try {
-      if (newTodo.title.trim()) {
-        if (editMode) {
-          // Edit existing todo
-          const response = await axios.put(`http://localhost:5000/api/todos/${editTodoId}`, newTodo);
-          const updatedTodos = todos.map((todo) =>
-            todo.id === editTodoId ? response.data : todo
-          );
-          setTodos(updatedTodos);
-          setEditMode(false); // Exit edit mode after saving
-          setEditTodoId(null); // Clear the edit ID
-        } else {
-          // Add new todo
-          const response = await axios.post('http://localhost:5000/api/todos', newTodo);
-          const updatedTodos = [...todos, response.data];
-          setTodos(updatedTodos);
-        }
-        setNewTodo({
-          title: '',
-          description: '',
-          dueDate: '',
-          expiration: '',
-          priority: 'Medium',
-        });
-        localStorage.setItem('todos', JSON.stringify(todos)); // Update localStorage
+// Add or Edit Todo
+const addOrEditTodo = async () => {
+  const userId = localStorage.getItem('userId');
+  try {
+    if (newTodo.title.trim()) {
+      const todoData = { ...newTodo, userId };
+      if (editMode) {
+        await axios.put(`http://localhost:5000/api/todos/${editTodoId}`, todoData);
+        setEditMode(false);
+        setEditTodoId(null);
+      } else {
+        await axios.post('http://localhost:5000/api/todos', todoData);
       }
-    } catch (error) {
-      console.error('Error adding or editing todo:', error);
+      fetchTodos();
     }
-  };
+  } catch (error) {
+    console.error('Error adding or editing todo:', error);
+  }
+};
+
+  
 
   const deleteTodo = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/todos/${id}`);
-      const updatedTodos = todos.filter((todo) => todo.id !== id);
-      setTodos(updatedTodos);
-      localStorage.setItem('todos', JSON.stringify(updatedTodos));
+      fetchTodos(); // Fetch the updated todos list after deletion
     } catch (error) {
       console.error('Error deleting todo:', error);
     }
@@ -88,11 +77,7 @@ function Todo() {
   const markAsCompleted = async (id) => {
     try {
       await axios.patch(`http://localhost:5000/api/todos/${id}/complete`);
-      const updatedTodos = todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: true } : todo
-      );
-      setTodos(updatedTodos);
-      localStorage.setItem('todos', JSON.stringify(updatedTodos));
+      fetchTodos(); // Fetch the updated todos list after marking as completed
     } catch (error) {
       console.error('Error marking todo as completed:', error);
     }
@@ -111,21 +96,34 @@ function Todo() {
   };
 
   const handleLogout = () => {
-    // Clear user session or token here if needed
-    navigate('/login'); // Navigate to the login page
+    navigate('/login');
   };
 
   useEffect(() => {
     fetchTodos();
   }, [filter, sortBy, searchTerm]);
 
+  useEffect(() => {
+    // Establish an SSE connection to receive notifications
+    const eventSource = new EventSource('http://localhost:5000/api/notifications');
+
+    eventSource.onmessage = (event) => {
+      const newNotification = JSON.parse(event.data);
+      setNotifications((prevNotifications) => [...prevNotifications, newNotification]);
+    };
+
+    // Clean up the EventSource connection when the component unmounts
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+
   return (
-    
     <div data-testid="todo-1">
       <div className='head'>TODO APPLICATION</div>
       <button onClick={handleLogout} className="logout-button">Logout</button>
       
-      <div class="web">
+      <div className="web">
         <h1>Add Task</h1>
         <input
           type="text"
@@ -147,7 +145,6 @@ function Todo() {
         <div className='x'>Expiration Date and Time</div>
         <input
           type="datetime-local"
-          placeholder="Expiration Date"
           value={newTodo.expiration}
           onChange={(e) => setNewTodo({ ...newTodo, expiration: e.target.value })}
         />
@@ -167,42 +164,52 @@ function Todo() {
       </div>
 
       <div className='web2'>
-      <h1> My Tasks </h1>
-      <label>Search Your Task</label>
-      <input
-        type="text"
-        placeholder="Search todos"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-       <div className="filter-sort-container">
-    <label>Filter by Status</label>
-    <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-        <option value="all">All</option>
-        <option value="completed">Completed</option>
-        <option value="pending">Pending</option>
-    </select>
-    <label>Sort by</label>
-    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-        <option value="dueDate">Due Date</option>
-        <option value="priority">Priority</option>
-    </select>
-</div>
-</div>
-<div className='y'>
-    <ul className='todo-list-container '>
-      <TodoList
-        todos={todos}
-        deleteTodo={deleteTodo}
-        markAsCompleted={markAsCompleted}
-        startEditing={startEditing}/>
-    </ul>
-    </div>   
-       
-     
-      <div>
+      <div className="filter-sort-container">
+          <label>Search</label>
+          <input
+           className='searcht'
+            type="text"
+            placeholder="Search todos"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <label>Filter</label>
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="all">All</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+          </select>
+          <label>Sort By</label>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="dueDate">Due Date</option>
+            <option value="priority">Priority</option>
+          </select>
+        </div>
+      </div>
+
+      <div className='y'>
+      <h1>My Todo Tasks</h1>
+        <ul className='todo-list-container'>
+          <TodoList
+            todos={todos}
+            deleteTodo={deleteTodo}
+            markAsCompleted={markAsCompleted}
+            startEditing={startEditing}
+          />
+        </ul>
+      </div>   
+
+      <div className="notifications">
+        <div className='ti'>Notifications</div>
+        <ul>
+          {notifications.map((notification, index) => (
+            <li key={index}>
+              {notification.title}: {notification.description} (Due: {new Date(notification.dueDate).toLocaleString()})
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
-  </div>
   );
 }
 
