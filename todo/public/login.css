@@ -1,0 +1,84 @@
+*{
+    margin:0;
+    padding: 0;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+   
+    background-image: linear-gradient(rgba(15, 8, 66, 0.65), rgba(0, 0, 0, 0.65)), url("");
+}
+
+.container {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.form-box {
+    width: 100%;
+    text-align: center;
+    color: #fff;
+}
+
+h1 {
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-field {
+    margin-bottom: 15px;
+}
+
+.input-field input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+}
+
+.button-group {
+    margin-bottom: 20px;
+}
+
+.btn {
+    width: 100%;
+    padding: 10px;
+    background: #f5168d;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background: #640437;
+}
+
+.additional-options {
+    font-size: 0.9em;
+}
+
+.additional-options a {
+    color: #000000;
+    text-decoration: none;
+}
+ssss
+.additional-options a:hover {
+    text-decoration: underline;
+}
