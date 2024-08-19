@@ -160,4 +160,84 @@ describe('Task API', () => {
 
         expect(response.body.expirationDate).toBe('2025-01-01');
     });
+
+    // New test cases for viewing task list with filter and sort
+
+    it('should get all tasks with default view', async () => {
+        const response = await request(app)
+            .get('/tasks')
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        expect(response.body).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: createdTaskId
+            })
+        ]));
+    });
+
+    it('should get tasks filtered by status "completed"', async () => {
+        await request(app)
+            .patch(`/tasks/${createdTaskId}/completed`)
+            .expect(200);
+
+        const response = await request(app)
+            .get('/tasks?status=completed')
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        expect(response.body).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: createdTaskId,
+                completed: 1
+            })
+        ]));
+    });
+
+    it('should get tasks filtered by status "pending"', async () => {
+        await request(app)
+            .patch(`/tasks/${createdTaskId}/completed`)
+            .expect(200);
+
+        const response = await request(app)
+            .get('/tasks?status=pending')
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        expect(response.body).toEqual(expect.not.arrayContaining([
+            expect.objectContaining({
+                id: createdTaskId,
+                completed: 1
+            })
+        ]));
+    });
+
+    it('should get tasks sorted by due date', async () => {
+        const response = await request(app)
+            .get('/tasks?sort=dueDate')
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        // Assuming the response tasks are sorted by dueDate in ascending order
+        expect(response.body).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: createdTaskId,
+                dueDate: '2025-01-01'
+            })
+        ]));
+    });
+
+    it('should get tasks sorted by priority', async () => {
+        const response = await request(app)
+            .get('/tasks?sort=priority')
+            .expect('Content-Type', /json/)
+            .expect(200);
+    
+        // Check that tasks are sorted by priority order: High, Medium, Low
+        const tasks = response.body;
+        expect(tasks[0].priority).toBe('High');
+        expect(tasks[1].priority).toBe('Medium');
+        expect(tasks[2].priority).toBe('Low');
+    });
+    
 });

@@ -37,7 +37,6 @@ db.serialize(() => {
         }
     });
 
-    // Add the expirationDate column if it does not exist
     db.all("PRAGMA table_info(tasks)", (err, columns) => {
         if (err) {
             console.error('Error checking table columns:', err.message);
@@ -72,9 +71,22 @@ app.post('/tasks', (req, res) => {
     stmt.finalize();
 });
 
-// Endpoint to get all tasks
+// Endpoint to get all tasks with optional filtering and sorting
 app.get('/tasks', (req, res) => {
-    db.all("SELECT * FROM tasks", [], (err, rows) => {
+    const { status, sortBy } = req.query;
+    let query = "SELECT * FROM tasks";
+    let params = [];
+
+    if (status && status !== 'all') {
+        query += " WHERE completed = ?";
+        params.push(status === 'completed' ? 1 : 0);
+    }
+
+    if (sortBy) {
+        query += " ORDER BY " + (sortBy === 'priority' ? "priority" : "dueDate");
+    }
+
+    db.all(query, params, (err, rows) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
@@ -140,7 +152,6 @@ app.delete('/tasks/:id', (req, res) => {
 app.patch('/tasks/:id/completed', (req, res) => {
     const id = req.params.id;
 
-    // Update the completed status of the task
     db.run("UPDATE tasks SET completed = 1 WHERE id = ?", [id], function(err) {
         if (err) {
             console.error('Error marking task as complete:', err.message);

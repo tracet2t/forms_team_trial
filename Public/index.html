@@ -40,6 +40,20 @@
 
         <!-- Task List Container -->
         <div class="task-list-container">
+            <div class="filters">
+                <label for="statusFilter">Filter by Status:</label>
+                <select id="statusFilter">
+                    <option value="all">All</option>
+                    <option value="completed">Completed</option>
+                    <option value="pending">Pending</option>
+                </select>
+
+                <label for="sortFilter">Sort by:</label>
+                <select id="sortFilter">
+                    <option value="dueDate">Due Date</option>
+                    <option value="priority">Priority</option>
+                </select>
+            </div>
             <div id="taskList"></div>
         </div>
     </div>

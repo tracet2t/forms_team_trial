@@ -12,7 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch tasks from the server
     function fetchTasks() {
-        fetch('/tasks')
+        const status = document.getElementById('statusFilter').value;
+        const sortBy = document.getElementById('sortFilter').value;
+
+        fetch(`/tasks?status=${status}&sortBy=${sortBy}`)
             .then(response => response.json())
             .then(data => {
                 tasks = data;
@@ -31,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const description = descriptionField.value;
         const dueDate = dueDateField.value;
         const priority = priorityField.value;
-        const expirationDate = expirationField.value; 
+        const expirationDate = expirationField.value;
 
         if (editingTaskId) {
             // Update task
@@ -78,16 +81,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p>${task.description}</p>
                     <p>Due Date: ${task.dueDate}</p>
                     <p>Priority: ${task.priority}</p>
-                    <p>Expiration: ${task.expirationDate || 'No expiration set'}</p> <!-- Display expiration -->
+                    <p>Expiration: ${task.expirationDate || 'No expiration set'}</p>
                 </div>
                 <div>
                     <button class="update" onclick="editTask(${task.id})">Update</button>
                     <button class="delete" onclick="deleteTask(${task.id})">Delete</button>
-                    <button class="complete" onclick="markComplete(${task.id})">Complete</button>
+                    <button class="complete" onclick="markComplete(${task.id})">${task.completed ? 'Undo' : 'Complete'}</button>
                 </div>
             `;
 
-            // Apply 'completed' class if the task is completed
             if (task.completed) {
                 taskItem.classList.add('completed');
             }
@@ -135,4 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => console.error('Error marking task as complete:', error));
     };
+
+    // Event listeners for filters and sorting
+    document.getElementById('statusFilter').addEventListener('change', fetchTasks);
+    document.getElementById('sortFilter').addEventListener('change', fetchTasks);
 });
