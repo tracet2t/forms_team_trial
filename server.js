@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const app = express();
-const port = process.env.PORT || 3000; 
+const port = process.env.PORT || 3000;
 
 // Middleware setup
 app.use(cors());
@@ -19,7 +19,7 @@ const db = new sqlite3.Database('./tasks.db', (err) => {
     }
 });
 
-// Create the table if it does not exist
+// Ensure the tasks table has the expirationDate column
 db.serialize(() => {
     db.run(`
         CREATE TABLE IF NOT EXISTS tasks (
@@ -28,25 +28,46 @@ db.serialize(() => {
             description TEXT,
             dueDate TEXT,
             priority TEXT,
-            completed INTEGER DEFAULT 0
+            completed INTEGER DEFAULT 0,
+            expirationDate TEXT
         )
     `, (err) => {
         if (err) {
             console.error('Error creating table:', err.message);
         }
     });
+
+    // Add the expirationDate column if it does not exist
+    db.all("PRAGMA table_info(tasks)", (err, columns) => {
+        if (err) {
+            console.error('Error checking table columns:', err.message);
+            return;
+        }
+
+        const hasExpirationDate = columns.some(col => col.name === 'expirationDate');
+
+        if (!hasExpirationDate) {
+            db.run("ALTER TABLE tasks ADD COLUMN expirationDate TEXT", (err) => {
+                if (err) {
+                    console.error('Error adding column:', err.message);
+                } else {
+                    console.log('Column "expirationDate" added successfully.');
+                }
+            });
+        }
+    });
 });
 
 // Endpoint to add a new task
 app.post('/tasks', (req, res) => {
-    const { title, description, dueDate, priority } = req.body;
+    const { title, description, dueDate, priority, expirationDate } = req.body;
 
-    const stmt = db.prepare("INSERT INTO tasks (title, description, dueDate, priority) VALUES (?, ?, ?, ?)");
-    stmt.run(title, description, dueDate, priority, function (err) {
+    const stmt = db.prepare("INSERT INTO tasks (title, description, dueDate, priority, expirationDate) VALUES (?, ?, ?, ?, ?)");
+    stmt.run(title, description, dueDate, priority, expirationDate, function (err) {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
-        res.status(201).json({ id: this.lastID, title, description, dueDate, priority });
+        res.status(201).json({ id: this.lastID, title, description, dueDate, priority, expirationDate });
     });
     stmt.finalize();
 });
@@ -79,10 +100,10 @@ app.get('/tasks/:id', (req, res) => {
 // Endpoint to update a task
 app.put('/tasks/:id', (req, res) => {
     const taskId = req.params.id;
-    const { title, description, dueDate, priority } = req.body;
+    const { title, description, dueDate, priority, expirationDate } = req.body;
 
-    const query = `UPDATE tasks SET title = ?, description = ?, dueDate = ?, priority = ? WHERE id = ?`;
-    const params = [title, description, dueDate, priority, taskId];
+    const query = `UPDATE tasks SET title = ?, description = ?, dueDate = ?, priority = ?, expirationDate = ? WHERE id = ?`;
+    const params = [title, description, dueDate, priority, expirationDate, taskId];
 
     db.run(query, params, function(err) {
         if (err) {
@@ -95,7 +116,8 @@ app.put('/tasks/:id', (req, res) => {
             title,
             description,
             dueDate,
-            priority
+            priority,
+            expirationDate
         });
     });
 });
@@ -132,7 +154,6 @@ app.patch('/tasks/:id/completed', (req, res) => {
         res.json({ id });
     });
 });
-
 
 // Gracefully shut down and close database
 process.on('SIGINT', () => {

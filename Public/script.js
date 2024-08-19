@@ -5,13 +5,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const descriptionField = document.getElementById('description');
     const dueDateField = document.getElementById('dueDate');
     const priorityField = document.getElementById('priority');
+    const expirationField = document.getElementById('expirationDate'); 
 
     let tasks = [];
     let editingTaskId = null;
 
     // Fetch tasks from the server
     function fetchTasks() {
-        fetch('/tasks') 
+        fetch('/tasks')
             .then(response => response.json())
             .then(data => {
                 tasks = data;
@@ -30,13 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const description = descriptionField.value;
         const dueDate = dueDateField.value;
         const priority = priorityField.value;
+        const expirationDate = expirationField.value; 
 
         if (editingTaskId) {
             // Update task
-            fetch(`/tasks/${editingTaskId}`, { 
+            fetch(`/tasks/${editingTaskId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description, dueDate, priority })
+                body: JSON.stringify({ title, description, dueDate, priority, expirationDate })
             })
             .then(response => response.json())
             .then(() => {
@@ -47,10 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => console.error('Error updating task:', error));
         } else {
             // Add new task
-            fetch('/tasks', { 
+            fetch('/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description, dueDate, priority })
+                body: JSON.stringify({ title, description, dueDate, priority, expirationDate })
             })
             .then(response => response.json())
             .then(() => {
@@ -69,13 +71,14 @@ document.addEventListener('DOMContentLoaded', () => {
         tasks.forEach(task => {
             const taskItem = document.createElement('div');
             taskItem.className = 'task-item';
-            taskItem.setAttribute('data-id', task.id); 
+            taskItem.setAttribute('data-id', task.id);
             taskItem.innerHTML = `
                 <div>
                     <h3>${task.title}</h3>
                     <p>${task.description}</p>
                     <p>Due Date: ${task.dueDate}</p>
                     <p>Priority: ${task.priority}</p>
+                    <p>Expiration: ${task.expirationDate || 'No expiration set'}</p> <!-- Display expiration -->
                 </div>
                 <div>
                     <button class="update" onclick="editTask(${task.id})">Update</button>
@@ -100,13 +103,14 @@ document.addEventListener('DOMContentLoaded', () => {
             descriptionField.value = task.description;
             dueDateField.value = task.dueDate;
             priorityField.value = task.priority;
+            expirationField.value = task.expirationDate; 
             editingTaskId = task.id;
             submitButton.textContent = 'Update Task';
         }
     };
 
     window.deleteTask = function(id) {
-        fetch(`/tasks/${id}`, { 
+        fetch(`/tasks/${id}`, {
             method: 'DELETE'
         })
         .then(() => {
@@ -116,22 +120,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.markComplete = function(id) {
-        console.log(`Marking task ${id} as complete...`); // Debugging log
-        fetch(`/tasks/${id}/completed`, { 
+        fetch(`/tasks/${id}/completed`, {
             method: 'PATCH'
         })
         .then(response => {
             if (response.ok) {
-                console.log(`Task ${id} marked as complete.`); // Debugging log
-                return response.json();
+                const taskItem = document.querySelector(`.task-item[data-id="${id}"]`);
+                if (taskItem) {
+                    taskItem.classList.add('completed');
+                }
             } else {
                 return response.json().then(error => Promise.reject(error));
-            }
-        })
-        .then(() => {
-            const taskItem = document.querySelector(`.task-item[data-id="${id}"]`);
-            if (taskItem) {
-                taskItem.classList.add('completed');
             }
         })
         .catch(error => console.error('Error marking task as complete:', error));

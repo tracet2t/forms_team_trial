@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To-Do App</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="container">
         <!-- Form Container -->
@@ -15,24 +17,27 @@
                 <input type="hidden" id="taskId">
                 <label for="title">Title</label>
                 <input type="text" id="title" required>
-                
+
                 <label for="description">Description</label>
                 <textarea id="description" rows="4"></textarea>
-                
+
                 <label for="dueDate">Due Date</label>
                 <input type="date" id="dueDate">
-                
+
+                <label for="expirationDate">Expiration Date and Time</label>
+                <input type="datetime-local" id="expirationDate">
+
                 <label for="priority">Priority</label>
                 <select id="priority">
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                 </select>
-                
+
                 <button type="submit" id="submitButton">Add Task</button>
             </form>
         </div>
-        
+
         <!-- Task List Container -->
         <div class="task-list-container">
             <div id="taskList"></div>
@@ -40,4 +45,5 @@
     </div>
     <script src="script.js"></script>
 </body>
+
 </html>

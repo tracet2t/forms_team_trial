@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../server'); 
+const app = require('../server');
 
 describe('Task API', () => {
     let createdTaskId;
@@ -88,5 +88,76 @@ describe('Task API', () => {
         await request(app)
             .get(`/tasks/${createdTaskId}`)
             .expect(404);
+    });
+
+    // New test cases for expirationDate
+
+    it('should create a new task with expirationDate', async () => {
+        const response = await request(app)
+            .post('/tasks')
+            .send({
+                title: 'Test Task with Expiration',
+                description: 'This is a test task with expiration date',
+                dueDate: '2024-12-31',
+                priority: 'High',
+                expirationDate: '2024-12-30'
+            })
+            .expect('Content-Type', /json/)
+            .expect(201);
+
+        createdTaskId = response.body.id;
+        expect(response.body).toHaveProperty('id');
+        expect(response.body.title).toBe('Test Task with Expiration');
+        expect(response.body.description).toBe('This is a test task with expiration date');
+        expect(response.body.dueDate).toBe('2024-12-31');
+        expect(response.body.priority).toBe('High');
+        expect(response.body.expirationDate).toBe('2024-12-30');
+    });
+
+    it('should get all tasks and verify expirationDate', async () => {
+        const response = await request(app)
+            .get('/tasks')
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        expect(response.body).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: createdTaskId,
+                title: 'Test Task with Expiration',
+                description: 'This is a test task with expiration date',
+                dueDate: '2024-12-31',
+                priority: 'High',
+                expirationDate: '2024-12-30'
+            })
+        ]));
+    });
+
+    it('should update a task with a new expirationDate', async () => {
+        const response = await request(app)
+            .put(`/tasks/${createdTaskId}`)
+            .send({
+                title: 'Updated Task with New Expiration',
+                description: 'This task has been updated with a new expiration date',
+                dueDate: '2025-01-01',
+                priority: 'Medium',
+                expirationDate: '2025-01-01'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        expect(response.body.title).toBe('Updated Task with New Expiration');
+        expect(response.body.description).toBe('This task has been updated with a new expiration date');
+        expect(response.body.dueDate).toBe('2025-01-01');
+        expect(response.body.priority).toBe('Medium');
+        expect(response.body.expirationDate).toBe('2025-01-01');
+    });
+
+    it('should get the updated task and verify the new expirationDate', async () => {
+        const response = await request(app)
+            .get(`/tasks/${createdTaskId}`)
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        expect(response.body.expirationDate).toBe('2025-01-01');
     });
 });
