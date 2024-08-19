@@ -4,49 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up Page</title>
-    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="signup.css">
 </head>
 <body>
-    <div id="signup" class="container">
-        <div class="form-box">
-            <h1>Sign Up</h1>
-            <form id="signupForm" action="#" method="POST">
-                <div class="input-group">
-                    <div class="input-field">
-                        <input type="text" id="fullName" placeholder="Full Name" required>
-                        <span id="invalidName" class="error"></span>
-                    </div>
-                    
-                    <div class="input-field">
-                        <input type="text" id="mobileNumber" placeholder="Mobile Number" required>
-                        <span id="InvalidMobile" class="error"></span>
-                    </div>
+    <div class="container">
+        <form>
+          
+          <div class="input-group">
+            <label>Full Name</label>
+            <input type="text" placeholder="Enter your name">
+          </div>
+    
+          <div class="input-group">
+            <label>Phone No.</label>
+            <input type="tel" placeholder="Enter your mobile">
+          </div>
+    
+          <div class="input-group">
+            <label>Email Id</label>
+            <input type="email" placeholder="Enter Email">
+          </div>   
 
-                    <div class="input-field">
-                        <input type="email" id="email" placeholder="Email" required>
-                        <span id="invalidEmail" class="error"></span>
-                    </div>
-                    
-                    <div class="input-field">
-                        <input type="password" id="password" placeholder="Password" required>
-                        <span id="passwordError" class="error"></span>
-                    </div>
-                    
-                    <div class="input-field">
-                        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
-                        <span id="confirmPasswordError" class="error"></span>
-                    </div>
-                </div>
-                
-                <div class="button-group">
-                    <button type="submit" class="btn">Sign Up</button>
-                </div>
-                
-                <div class="additional-options">
-                    <p>Already have an account? <a href="#login">Login</a></p>
-                </div>
-            </form>
-        </div>
-    </div>
+          <div class="input-group">
+            <label>Password</label>
+            <input type="email" placeholder="Enter Password">
+          </div>
+
+          <div class="input-group">
+            <label>Confirm Password</label>
+            <input type="email" placeholder="Enter Password again">
+          </div>
+    
+        <button>Submit</button>
+       
+      </form>
+    
+    
+      
+      </div>
 </body>
 </html>
