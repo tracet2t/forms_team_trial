@@ -3,24 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
+    <title>Sign Up Page</title>
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
-    
     <div id="signup" class="container">
         <div class="form-box">
             <h1>Sign Up</h1>
-            <form action="#" method="POST">
+            <form id="signupForm" action="#" method="POST">
                 <div class="input-group">
                     <div class="input-field">
-                        <input type="text" placeholder="Full Name" required>
+                        <input type="text" id="fullName" placeholder="Full Name" required>
+                        <span id="nameError" class="error"></span>
                     </div>
                     <div class="input-field">
-                        <input type="email" placeholder="Email" required>
+                        <input type="email" id="email" placeholder="Email" required>
+                        <span id="emailError" class="error"></span>
                     </div>
                     <div class="input-field">
-                        <input type="password" placeholder="Password" required>
+                        <input type="text" id="mobileNumber" placeholder="Mobile Number" required>
+                        <span id="mobileError" class="error"></span>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" id="password" placeholder="Password" required>
+                        <span id="passwordError" class="error"></span>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                        <span id="confirmPasswordError" class="error"></span>
                     </div>
                 </div>
                 <div class="button-group">
@@ -32,4 +42,5 @@
             </form>
         </div>
     </div>
-    </body>
+</body>
+</html>

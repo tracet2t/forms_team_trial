@@ -85,3 +85,59 @@ document.getElementById('cancelEdit').addEventListener('click', function() {
 window.onload = function() {
     displayTasks();
 };
+document.getElementById('signupForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    
+    let isValid = true;
+
+    const name = document.getElementById('fullName').value;
+    const namePattern = /^[A-Za-z\s]{1,20}$/;
+    if (!namePattern.test(name)) {
+        document.getElementById('nameError').textContent = 'Name should contain only letters and be up to 20 characters.';
+        isValid = false;
+    } else {
+        document.getElementById('nameError').textContent = '';
+    }
+
+    const mobileNumber = document.getElementById('mobileNumber').value;
+    const mobilePattern = /^\d{10}$/;
+    if (!mobilePattern.test(mobileNumber)) {
+        document.getElementById('mobileError').textContent = 'Mobile number should contain exactly 10 digits.';
+        isValid = false;
+    } else {
+        document.getElementById('mobileError').textContent = '';
+    }
+
+
+    const email = document.getElementById('email').value;
+    const emailPattern = /^[a-z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)$/;
+    if (!emailPattern.test(email)) {
+        document.getElementById('emailError').textContent = 'Email should be @gmail.com, @yahoo.com, or @outlook.com and in lowercase.';
+        isValid = false;
+    } else {
+        document.getElementById('emailError').textContent = '';
+    }
+
+
+    const password = document.getElementById('password').value;
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{4,8}$/;
+    if (!passwordPattern.test(password)) {
+        document.getElementById('passwordError').textContent = 'Password should be 4-8 characters long, with at least one uppercase, one lowercase, and one special character.';
+        isValid = false;
+    } else {
+        document.getElementById('passwordError').textContent = '';
+    }
+
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    if (confirmPassword !== password) {
+        document.getElementById('confirmPasswordError').textContent = 'Passwords do not match.';
+        isValid = false;
+    } else {
+        document.getElementById('confirmPasswordError').textContent = '';
+    }
+
+    if (isValid) {
+        alert('Sign up successful!');
+        
+    }
+});
