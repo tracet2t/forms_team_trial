@@ -108,6 +108,14 @@ document.getElementById('signupForm').addEventListener('submit', function(event)
         document.getElementById('InvalidMobile').textContent = '';
     }
 
+    const email = document.getElementById('email').value;
+    const emailPattern = /^[a-z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)$/;
+    if (!emailPattern.test(email)) {
+        document.getElementById('invalidEmail').textContent = 'Email should be @gmail.com, @yahoo.com, or @outlook.com and in lowercase.';
+        isValid = false;
+    } else {
+        document.getElementById('invalidEmail').textContent = '';
+    }
     if (isValid) {
         alert('Sign up successful!');
         
