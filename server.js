@@ -117,20 +117,23 @@ app.delete('/tasks/:id', (req, res) => {
 // Endpoint to mark a task as completed
 app.patch('/tasks/:id/completed', (req, res) => {
     const id = req.params.id;
-    console.log(`Attempting to mark task ${id} as complete...`); // Debug log
+
+    // Update the completed status of the task
     db.run("UPDATE tasks SET completed = 1 WHERE id = ?", [id], function(err) {
         if (err) {
-            console.error('Error updating task completion:', err.message);
-            return res.status(500).json({ error: err.message });
+            console.error('Error marking task as complete:', err.message);
+            return res.status(500).json({ error: 'Failed to mark task as complete' });
         }
-        console.log(`Task ${id} marked as complete.`); // Debug log
-        res.status(200).json({ id, completed: true });
+
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        res.json({ id });
     });
 });
 
 
-
-// Gracefully shut down and close database
 // Gracefully shut down and close database
 process.on('SIGINT', () => {
     db.close((err) => {

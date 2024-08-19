@@ -16,7 +16,7 @@ body {
     display: flex;
     width: 100%;
     max-width: 1200px;
-    height: 90vh; /* Adjust container height to fit more tasks */
+    height: 90vh; 
 }
 
 /* Form container styles */
@@ -27,14 +27,14 @@ body {
     padding: 20px;
     margin-right: 20px;
     flex: 1;
-    min-width: 300px; /* Set a minimum width to ensure form is usable */
+    min-width: 300px; 
 }
 
 /* Task list container styles */
 .task-list-container {
     flex: 2;
-    overflow-y: auto; /* Allow scrolling if tasks overflow */
-    height: 100%; /* Make sure it takes full height of the container */
+    overflow-y: auto; 
+    height: 100%; 
 }
 
 /* Heading styles */
@@ -54,12 +54,12 @@ label {
 
 /* Input, textarea, and select styles */
 input, textarea, select {
-    width: calc(100% - 16px); /* Account for padding */
+    width: calc(100% - 16px); 
     padding: 10px;
     margin-top: 5px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    box-sizing: border-box; /* Include padding in width calculation */
+    box-sizing: border-box; 
 }
 
 /* Button styles */
@@ -124,7 +124,10 @@ button:hover {
 .task-item.completed {
     background-color: #d4edda;
     text-decoration: line-through;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    transform: scale(1.02); 
 }
+
 
 /* Responsive design for smaller screens */
 @media (max-width: 600px) {

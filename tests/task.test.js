@@ -1,15 +1,15 @@
 const request = require('supertest');
-const app = require('../server'); // Adjust path if necessary
+const app = require('../server'); 
 
 describe('Task API', () => {
     let createdTaskId;
 
     beforeAll((done) => {
-        server = app.listen(3001, () => done()); // Ensure server starts on a different port
+        server = app.listen(3001, () => done()); 
     });
 
     afterAll((done) => {
-        server.close(done); // Ensure server shuts down after tests
+        server.close(done); 
     });
 
     it('should create a new task', async () => {

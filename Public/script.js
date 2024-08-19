@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch tasks from the server
     function fetchTasks() {
-        fetch('/tasks') // Adjust the URL to match your endpoint
+        fetch('/tasks') 
             .then(response => response.json())
             .then(data => {
                 tasks = data;
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (editingTaskId) {
             // Update task
-            fetch(`/tasks/${editingTaskId}`, { // Adjust the URL to match your endpoint
+            fetch(`/tasks/${editingTaskId}`, { 
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, description, dueDate, priority })
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => console.error('Error updating task:', error));
         } else {
             // Add new task
-            fetch('/tasks', { // Adjust the URL to match your endpoint
+            fetch('/tasks', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, description, dueDate, priority })
@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tasks.forEach(task => {
             const taskItem = document.createElement('div');
             taskItem.className = 'task-item';
+            taskItem.setAttribute('data-id', task.id); 
             taskItem.innerHTML = `
                 <div>
                     <h3>${task.title}</h3>
@@ -82,6 +83,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="complete" onclick="markComplete(${task.id})">Complete</button>
                 </div>
             `;
+
+            // Apply 'completed' class if the task is completed
+            if (task.completed) {
+                taskItem.classList.add('completed');
+            }
+
             taskList.appendChild(taskItem);
         });
     }
@@ -99,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.deleteTask = function(id) {
-        fetch(`/tasks/${id}`, { // Adjust the URL to match your endpoint
+        fetch(`/tasks/${id}`, { 
             method: 'DELETE'
         })
         .then(() => {
@@ -122,9 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         })
         .then(() => {
-            fetchTasks();
+            const taskItem = document.querySelector(`.task-item[data-id="${id}"]`);
+            if (taskItem) {
+                taskItem.classList.add('completed');
+            }
         })
         .catch(error => console.error('Error marking task as complete:', error));
     };
-    
 });
