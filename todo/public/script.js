@@ -116,6 +116,15 @@ document.getElementById('signupForm').addEventListener('submit', function(event)
     } else {
         document.getElementById('invalidEmail').textContent = '';
     }
+
+    const password = document.getElementById('password').value;
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{4,8}$/;
+    if (!passwordPattern.test(password)) {
+        document.getElementById('passwordError').textContent = 'Password should be 4-8 characters long, with at least one uppercase, one lowercase, and one special character.';
+        isValid = false;
+    } else {
+        document.getElementById('passwordError').textContent = '';
+    }
     if (isValid) {
         alert('Sign up successful!');
         
