@@ -1,152 +1,83 @@
 const express = require('express');
+const app = express();
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
-const cors = require('cors');
-const app = express();
-const port = process.env.PORT || 3000; 
+const path = require('path');
 
-// Middleware setup
-app.use(cors());
+const db = new sqlite3.Database(':memory:');
+
+// Middleware
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Database setup
-const db = new sqlite3.Database('./tasks.db', (err) => {
-    if (err) {
-        console.error('Error opening database:', err.message);
-    } else {
-        console.log('Connected to the SQLite database.');
-    }
-});
-
-// Create the table if it does not exist
+// Initialize in-memory database and create tasks table
 db.serialize(() => {
-    db.run(`
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            description TEXT,
-            dueDate TEXT,
-            priority TEXT,
-            expirationDate TEXT,
-            expirationTime TEXT,
-            completed INTEGER DEFAULT 0
-        )
-    `, (err) => {
-        if (err) {
-            console.error('Error creating table:', err.message);
-        }
-    });
+    db.run("CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT, description TEXT, dueDate TEXT, priority TEXT, completed BOOLEAN, expirationDate TEXT, expirationTime TEXT)");
 });
 
-// Endpoint to add a new task
-app.post('/tasks', (req, res) => {
-    const { title, description, dueDate, priority, expirationDate, expirationTime } = req.body;
-
-    const stmt = db.prepare("INSERT INTO tasks (title, description, dueDate, priority, expirationDate, expirationTime) VALUES (?, ?, ?, ?, ?, ?)");
-    stmt.run(title, description, dueDate, priority, expirationDate, expirationTime, function (err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.status(201).json({ id: this.lastID, title, description, dueDate, priority, expirationDate, expirationTime });
-    });
-    stmt.finalize();
-});
-
-// Endpoint to get all tasks
+// Routes
 app.get('/tasks', (req, res) => {
-    db.all("SELECT * FROM tasks", [], (err, rows) => {
+    db.all("SELECT * FROM tasks", (err, rows) => {
         if (err) {
-            return res.status(500).json({ error: err.message });
+            res.status(500).json({ error: err.message });
+            return;
         }
         res.json(rows);
     });
 });
 
-// Endpoint to get a specific task
-app.get('/tasks/:id', (req, res) => {
-    const id = req.params.id;
-    db.get("SELECT * FROM tasks WHERE id = ?", [id], (err, row) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        if (row) {
-            res.json(row);
-        } else {
-            res.status(404).json({ error: 'Task not found' });
-        }
-    });
-});
-
-// Endpoint to update a task
-app.put('/tasks/:id', (req, res) => {
-    const taskId = req.params.id;
+app.post('/tasks', (req, res) => {
     const { title, description, dueDate, priority, expirationDate, expirationTime } = req.body;
-
-    const query = `UPDATE tasks SET title = ?, description = ?, dueDate = ?, priority = ?, expirationDate = ?, expirationTime = ? WHERE id = ?`;
-    const params = [title, description, dueDate, priority, expirationDate, expirationTime, taskId];
-
-    db.run(query, params, function(err) {
+    db.run("INSERT INTO tasks (title, description, dueDate, priority, completed, expirationDate, expirationTime) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+    [title, description, dueDate, priority, false, expirationDate, expirationTime], 
+    function(err) {
         if (err) {
-            console.error('Error updating task:', err.message);
-            return res.status(500).json({ error: 'Failed to update task' });
+            res.status(500).json({ error: err.message });
+            return;
         }
-
-        res.json({
-            id: taskId,
-            title,
-            description,
-            dueDate,
-            priority,
-            expirationDate,
-            expirationTime
-        });
+        res.json({ id: this.lastID });
     });
 });
 
-// Endpoint to delete a task
+app.put('/tasks/:id', (req, res) => {
+    const { title, description, dueDate, priority, expirationDate, expirationTime } = req.body;
+    db.run("UPDATE tasks SET title = ?, description = ?, dueDate = ?, priority = ?, expirationDate = ?, expirationTime = ? WHERE id = ?", 
+    [title, description, dueDate, priority, expirationDate, expirationTime, req.params.id], 
+    function(err) {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({ updated: this.changes });
+    });
+});
+
 app.delete('/tasks/:id', (req, res) => {
-    const id = req.params.id;
-    db.run("DELETE FROM tasks WHERE id = ?", [id], function (err) {
+    db.run("DELETE FROM tasks WHERE id = ?", [req.params.id], function(err) {
         if (err) {
-            return res.status(500).json({ error: err.message });
+            res.status(500).json({ error: err.message });
+            return;
         }
-        if (this.changes === 0) {
-            return res.status(404).json({ error: 'Task not found' });
-        }
-        res.status(204).end();
+        res.json({ deleted: this.changes });
     });
 });
 
-// Endpoint to mark a task as completed
 app.patch('/tasks/:id/completed', (req, res) => {
-    const id = req.params.id;
-    db.run("UPDATE tasks SET completed = 1 WHERE id = ?", [id], function(err) {
+    db.run("UPDATE tasks SET completed = ? WHERE id = ?", [true, req.params.id], function(err) {
         if (err) {
-            console.error('Error updating task completion:', err.message);
-            return res.status(500).json({ error: err.message });
+            res.status(500).json({ error: err.message });
+            return;
         }
-        res.status(200).json({ id, completed: true });
+        res.json({ completed: this.changes });
     });
 });
 
-// Gracefully shut down and close database
-process.on('SIGINT', () => {
-    db.close((err) => {
-        if (err) {
-            console.error('Error closing database:', err.message);
-        } else {
-            console.log('Database connection closed.');
-        }
-        process.exit(0);
-    });
+// Serve the frontend
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Export the app for testing
-module.exports = app;
-
-if (require.main === module) {
-    app.listen(port, () => {
-        console.log(`Server running at http://localhost:${port}`);
-    });
-}
+// Start the server
+app.listen(3000, () => {
+    console.log('Server is running on http://localhost:3000');
+});
