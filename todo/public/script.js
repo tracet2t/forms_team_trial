@@ -125,6 +125,13 @@ document.getElementById('signupForm').addEventListener('submit', function(event)
     } else {
         document.getElementById('passwordError').textContent = '';
     }
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    if (confirmPassword !== password) {
+        document.getElementById('confirmPasswordError').textContent = 'Password does not match.';
+        isValid = false;
+    } else {
+        document.getElementById('confirmPasswordError').textContent = '';
+    }
     if (isValid) {
         alert('Sign up successful!');
         
