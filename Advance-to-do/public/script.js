@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const priorityField = document.getElementById('priority');
     const expirationDateField = document.getElementById('expirationDate');
     const expirationTimeField = document.getElementById('expirationTime');
+    const statusFilter = document.getElementById('statusFilter');
+    const sortFilter = document.getElementById('sortFilter');
 
     let tasks = [];
     let editingTaskId = null;
@@ -17,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(data => {
                 tasks = data;
-                renderTasks();
+                applyFilters();
             })
             .catch(error => console.error('Error fetching tasks:', error));
     }
@@ -68,29 +70,65 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function renderTasks() {
-        const tbody = document.getElementById('taskList').getElementsByTagName('tbody')[0];
-        tbody.innerHTML = ''; // Clear existing tasks
+    // Apply filters and sorting
+    function applyFilters() {
+        const status = statusFilter.value;
+        const sortBy = sortFilter.value;
 
-        tasks.forEach(task => {
-            const taskRow = tbody.insertRow();
-            taskRow.className = task.completed ? 'task-item completed' : 'task-item';
-            taskRow.innerHTML = `
-                <td>${task.title}</td>
-                <td>${task.description}</td>
-                <td>${task.dueDate}</td>
-                <td>${task.priority}</td>
-                <td>${task.expirationDate ? task.expirationDate : ''}</td>
-                <td>${task.expirationTime ? task.expirationTime : ''}</td>
-                <td>
+        let filteredTasks = tasks;
+
+        // Filter tasks by status
+        if (status !== 'all') {
+            filteredTasks = tasks.filter(task => 
+                (status === 'completed' && task.completed) || 
+                (status === 'pending' && !task.completed)
+            );
+        }
+
+        // Sort tasks
+        if (sortBy) {
+            filteredTasks = filteredTasks.sort((a, b) => {
+                if (sortBy === 'dueDate') {
+                    return new Date(a.dueDate) - new Date(b.dueDate);
+                } else if (sortBy === 'priority') {
+                    const priorityOrder = { 'Low': 1, 'Medium': 2, 'High': 3 };
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                }
+                return 0;
+            });
+        }
+
+        renderTasks(filteredTasks);
+    }
+
+    // Render tasks
+    function renderTasks(filteredTasks) {
+        const taskList = document.getElementById('taskList');
+        taskList.innerHTML = ''; // Clear existing tasks
+
+        filteredTasks.forEach(task => {
+            const taskItem = document.createElement('div');
+            taskItem.className = `task-item ${task.completed ? 'completed' : ''}`;
+            taskItem.innerHTML = `
+                <div>
+                    <h3>${task.title}</h3>
+                    <p>${task.description}</p>
+                    <p>Due Date: ${task.dueDate}</p>
+                    <p>Priority: ${task.priority}</p>
+                    ${task.expirationDate ? `<p>Expiration Date: ${task.expirationDate}</p>` : ''}
+                    ${task.expirationTime ? `<p>Expiration Time: ${task.expirationTime}</p>` : ''}
+                </div>
+                <div>
                     <button class="complete" onclick="markComplete(${task.id})">&#9989; Complete</button>
                     <button class="update" onclick="editTask(${task.id})">&#9998; Update</button>
                     <button class="delete" onclick="deleteTask(${task.id})">&#10060; Delete</button>
-                </td>
+                </div>
             `;
+            taskList.appendChild(taskItem);
         });
     }
 
+    // Edit task
     window.editTask = function(id) {
         const task = tasks.find(t => t.id === id);
         if (task) {
@@ -105,6 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Delete task
     window.deleteTask = function(id) {
         fetch(`/tasks/${id}`, {
             method: 'DELETE'
@@ -116,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Error deleting task:', error));
     };
 
+    // Mark task as complete
     window.markComplete = function(id) {
         fetch(`/tasks/${id}/completed`, {
             method: 'PATCH'
@@ -128,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Error marking task as complete:', error));
     };
 
+    // Show message
     function showMessage(message, type) {
         const messageElement = document.createElement('div');
         messageElement.className = `message ${type}`;
@@ -137,4 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
             messageElement.remove();
         }, 3000); // Remove the message after 3 seconds
     }
+
+    // Add event listeners for filter and sort changes
+    statusFilter.addEventListener('change', applyFilters);
+    sortFilter.addEventListener('change', applyFilters);
 });
