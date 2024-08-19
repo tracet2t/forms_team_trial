@@ -5,13 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const descriptionField = document.getElementById('description');
     const dueDateField = document.getElementById('dueDate');
     const priorityField = document.getElementById('priority');
-    
+    const expirationDateField = document.getElementById('expirationDate');
+    const expirationTimeField = document.getElementById('expirationTime');
+
     let tasks = [];
     let editingTaskId = null;
 
     // Fetch tasks from the server
     function fetchTasks() {
-        fetch('/tasks') // Adjust the URL to match your endpoint
+        fetch('/tasks')
             .then(response => response.json())
             .then(data => {
                 tasks = data;
@@ -30,13 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const description = descriptionField.value;
         const dueDate = dueDateField.value;
         const priority = priorityField.value;
+        const expirationDate = expirationDateField.value;
+        const expirationTime = expirationTimeField.value;
 
         if (editingTaskId) {
             // Update task
-            fetch(`/tasks/${editingTaskId}`, { // Adjust the URL to match your endpoint
+            fetch(`/tasks/${editingTaskId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description, dueDate, priority })
+                body: JSON.stringify({ title, description, dueDate, priority, expirationDate, expirationTime })
             })
             .then(response => response.json())
             .then(() => {
@@ -44,47 +48,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitButton.textContent = 'Add Task';
                 form.reset(); // Reset the form
                 fetchTasks();
-                showMessage('Task updated successfully!'); // Display success message
+                showMessage('Task updated successfully!', 'success'); // Display success message
             })
             .catch(error => console.error('Error updating task:', error));
         } else {
             // Add new task
-            fetch('/tasks', { // Adjust the URL to match your endpoint
+            fetch('/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description, dueDate, priority })
+                body: JSON.stringify({ title, description, dueDate, priority, expirationDate, expirationTime })
             })
             .then(response => response.json())
             .then(() => {
                 form.reset(); // Reset the form
                 fetchTasks();
-                showMessage('Task added successfully!'); // Display success message
+                showMessage('Task added successfully!', 'success'); // Display success message
             })
             .catch(error => console.error('Error adding task:', error));
         }
     });
 
     function renderTasks() {
-        const taskList = document.getElementById('taskList');
-        taskList.innerHTML = ''; // Clear existing tasks
+        const tbody = document.getElementById('taskList').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = ''; // Clear existing tasks
 
         tasks.forEach(task => {
-            const taskItem = document.createElement('div');
-            taskItem.className = 'task-item';
-            taskItem.innerHTML = `
-                <div>
-                    <h3>${task.title}</h3>
-                    <p>${task.description}</p>
-                    <p>Due Date: ${task.dueDate}</p>
-                    <p>Priority: ${task.priority}</p>
-                </div>
-                <div>
-                    <button class="update" onclick="editTask(${task.id})">Update</button>
-                    <button class="delete" onclick="deleteTask(${task.id})">Delete</button>
-                    <button class="complete" onclick="markComplete(${task.id})">Complete</button>
-                </div>
+            const taskRow = tbody.insertRow();
+            taskRow.className = task.completed ? 'task-item completed' : 'task-item';
+            taskRow.innerHTML = `
+                <td>${task.title}</td>
+                <td>${task.description}</td>
+                <td>${task.dueDate}</td>
+                <td>${task.priority}</td>
+                <td>${task.expirationDate ? task.expirationDate : ''}</td>
+                <td>${task.expirationTime ? task.expirationTime : ''}</td>
+                <td>
+                    <button class="complete" onclick="markComplete(${task.id})">&#9989; Complete</button>
+                    <button class="update" onclick="editTask(${task.id})">&#9998; Update</button>
+                    <button class="delete" onclick="deleteTask(${task.id})">&#10060; Delete</button>
+                </td>
             `;
-            taskList.appendChild(taskItem);
         });
     }
 
@@ -95,43 +98,39 @@ document.addEventListener('DOMContentLoaded', () => {
             descriptionField.value = task.description;
             dueDateField.value = task.dueDate;
             priorityField.value = task.priority;
+            expirationDateField.value = task.expirationDate;
+            expirationTimeField.value = task.expirationTime;
             editingTaskId = task.id;
             submitButton.textContent = 'Update Task';
         }
     };
 
     window.deleteTask = function(id) {
-        fetch(`/tasks/${id}`, { // Adjust the URL to match your endpoint
+        fetch(`/tasks/${id}`, {
             method: 'DELETE'
         })
         .then(() => {
             fetchTasks();
-            showMessage('Task deleted successfully!'); // Display success message
+            showMessage('Task deleted successfully!', 'error'); // Display success message
         })
         .catch(error => console.error('Error deleting task:', error));
     };
 
     window.markComplete = function(id) {
-        fetch(`/tasks/${id}/completed`, { 
+        fetch(`/tasks/${id}/completed`, {
             method: 'PATCH'
         })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                return response.json().then(error => Promise.reject(error));
-            }
-        })
+        .then(response => response.json())
         .then(() => {
             fetchTasks();
-            showMessage('Task marked as complete!'); // Display success message
+            showMessage('Task marked as complete!', 'success'); // Display success message
         })
         .catch(error => console.error('Error marking task as complete:', error));
     };
 
-    function showMessage(message) {
+    function showMessage(message, type) {
         const messageElement = document.createElement('div');
-        messageElement.className = 'success-message';
+        messageElement.className = `message ${type}`;
         messageElement.textContent = message;
         document.body.appendChild(messageElement);
         setTimeout(() => {
