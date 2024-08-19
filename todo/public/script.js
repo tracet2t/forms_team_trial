@@ -136,4 +136,62 @@ document.getElementById('signupForm').addEventListener('submit', function(event)
         alert('Sign up successful!');
         
     }
+    document.getElementById('signupForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        let isValid = true;
+    
+        const name = document.getElementById('fullName').value;
+        const mobileNumber = document.getElementById('mobileNumber').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+    
+        const namePattern = /^[A-Za-z\s]{1,20}$/;
+        const mobilePattern = /^\d{10}$/;
+        const emailPattern = /^[a-z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)$/;
+        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{4,8}$/;
+    
+        if (!namePattern.test(name)) {
+            document.getElementById('invalidName').textContent = 'Name should contain only lowercase and uppercase letters, should add at least 1 characters and be up to 20 characters.';
+            isValid = false;
+        } else {
+            document.getElementById('invalidName').textContent = '';
+        }
+    
+        if (!mobilePattern.test(mobileNumber)) {
+            document.getElementById('InvalidMobile').textContent = 'Mobile number should contain correct format';
+            isValid = false;
+        } else {
+            document.getElementById('InvalidMobile').textContent = '';
+        }
+    
+        if (!emailPattern.test(email)) {
+            document.getElementById('invalidEmail').textContent = 'Email should be @gmail.com, @yahoo.com, or @outlook.com and in lowercase.';
+            isValid = false;
+        } else {
+            document.getElementById('invalidEmail').textContent = '';
+        }
+    
+        if (!passwordPattern.test(password)) {
+            document.getElementById('passwordError').textContent = 'Password should be 4-8 characters long, with at least one uppercase, one lowercase, and one special character.';
+            isValid = false;
+        } else {
+            document.getElementById('passwordError').textContent = '';
+        }
+    
+        if (confirmPassword !== password) {
+            document.getElementById('confirmPasswordError').textContent = 'Password does not match.';
+            isValid = false;
+        } else {
+            document.getElementById('confirmPasswordError').textContent = '';
+        }
+    
+        if (isValid) {
+            const user = { name, mobileNumber, email, password };
+            localStorage.setItem('user', JSON.stringify(user));
+            alert('Sign up successful!');
+        }
+    });
+    
 });
