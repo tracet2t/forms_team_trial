@@ -5,22 +5,28 @@ import Todo from './components/Todo';
 import Register from './components/Register';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('token');
+  });
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+  };
+
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
-        <Route 
-          path="/todo" 
-          element={isAuthenticated ? <Todo /> : <Navigate to="/login" />} 
-        />
-        <Route path="/register" element={<Register />} />
-        <Route path="*" element={<Navigate to="/login" />} /> {/* Redirect unknown routes to login */}
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/todo" /> : <Login onLoginSuccess={handleLoginSuccess} />} />
+        <Route path="/todo" element={isAuthenticated ? <Todo onLogout={handleLogout} /> : <Navigate to="/login" />} />
+        <Route path="/register" element={isAuthenticated ? <Navigate to="/todo" /> : <Register />} />
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
   );

@@ -5,12 +5,12 @@ const cors = require('cors');
 const cron = require('node-cron'); 
 const nodemailer = require('nodemailer'); 
 
+
 const app = express(); 
-const db = new sqlite3.Database('./userdb.sqlite'); 
+const db = new sqlite3.Database('./db.sqlite'); 
 
 app.use(bodyParser.json()); 
 app.use(cors()); 
-
 // Initialize database tables if they don't exist
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS todos (
@@ -37,7 +37,7 @@ db.serialize(() => {
     name TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     userId TEXT NOT NULL UNIQUE
-  )`);
+  )`);``
 });
 
 const bcrypt = require('bcrypt');
@@ -102,8 +102,8 @@ app.post('/api/login', (req, res) => {
       }
 
       if (result) {
-        // Passwords match
-        res.status(200).json({ message: 'Login successful.' });
+        // Passwords match, return userId and name
+        res.status(200).json({ userId: row.userId, name: row.name });
       } else {
         // Passwords don't match
         res.status(401).json({ error: 'Invalid name or password.' });
@@ -112,26 +112,48 @@ app.post('/api/login', (req, res) => {
   });
 });
 
+
+// Route to get a specific user by their userId
+app.get('/api/users/:userId', (req, res) => {
+  const { userId } = req.params;
+  
+  db.get('SELECT name FROM users WHERE userId = ?', [userId], (err, row) => {
+    if (err) {
+      console.error('Error fetching user:', err);
+      return res.status(500).json({ error: 'Failed to fetch user.' });
+    }
+    if (!row) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    res.json(row); // Sends the user name to the client
+  });
+});
+
+
 // Route to get all todos, with optional filtering and sorting
 app.get('/api/todos', (req, res) => {
-  const { status, sortBy, search } = req.query;
+  const { userId, status, sortBy, search } = req.query;
 
-  let query = 'SELECT * FROM todos';
-  const params = [];
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  let query = 'SELECT * FROM todos WHERE userId = ?';
+  const params = [userId];
 
   // Add filtering by status if specified
   if (status) {
     if (status === 'completed') {
-      query += ' WHERE completed = 1';
+      query += ' AND completed = 1';
     } else if (status === 'pending') {
-      query += ' WHERE completed = 0';
+      query += ' AND completed = 0';
     }
   }
 
   // Add search functionality
   if (search) {
     const searchTerm = `%${search}%`;
-    query += (query.includes('WHERE') ? ' AND ' : ' WHERE ') + 
+    query += (query.includes('WHERE') ? ' AND ' : ' AND ') + 
              '(title LIKE ? OR description LIKE ?)';
     params.push(searchTerm, searchTerm);
   }
@@ -153,6 +175,7 @@ app.get('/api/todos', (req, res) => {
   });
 });
 
+
 // Route to get a specific todo by its ID
 app.get('/api/todos/:id', (req, res) => {
   const { id } = req.params;
@@ -172,32 +195,26 @@ app.get('/api/todos/:id', (req, res) => {
 app.post('/api/todos', (req, res) => {
   const { title, description, dueDate, priority, expiration, userId } = req.body;
 
+  console.log('Received userId:', userId);
   if (!title) {
     return res.status(400).send('Title is required');
   }
 
   if (!userId) {
-    return res.status(400).send('userId is required');
+    return res.status(400).send('User ID is required');
   }
 
-  db.get('SELECT * FROM users WHERE id = ?', [userId], (err, user) => {
-    if (err) {
-      return res.status(500).send('Error fetching user');
-    }
-    if (!user) {
-      return res.status(400).send('Invalid userId');
-    }
-
-    db.run('INSERT INTO todos (title, description, dueDate, priority, expiration, userId) VALUES (?, ?, ?, ?, ?, ?)', 
-      [title, description, dueDate, priority, expiration, userId], 
-      function(err) {
-        if (err) {
-          return res.status(500).send('Error adding todo');
-        }
-        res.json({ id: this.lastID, title, description, dueDate, priority, expiration, userId, completed: false });
-      });
-  });
+  db.run('INSERT INTO todos (title, description, dueDate, priority, expiration, userId) VALUES (?, ?, ?, ?, ?, ?)', 
+    [title, description, dueDate, priority, expiration, userId], 
+    function(err) {
+      if (err) {
+        console.error('Error adding todo:', err);
+        return res.status(500).send('Error adding todo');
+      }
+      res.json({ id: this.lastID, title, description, dueDate, priority, expiration, completed: false, userId });
+    });
 });
+
 
 
 // Route to delete a todo by its ID
@@ -296,8 +313,7 @@ app.get('/api/notifications', (req, res) => {
     const now = new Date();
     const upcomingTime = new Date(now.getTime() + 10 * 60000); // 10 minutes from now
 
-    db.all(`SELECT * FROM todos
-            WHERE dueDate IS NOT NULL
+    db.all(`SELECT * FROM todos WHERE dueDate IS NOT NULL
             AND completed = 0
             AND strftime('%Y-%m-%dT%H:%M:%S', dueDate) <= strftime('%Y-%m-%dT%H:%M:%S', ?)
             AND id NOT IN (SELECT todoId FROM notifications)`, [upcomingTime.toISOString()], (err, todos) => {
@@ -340,7 +356,7 @@ app.get('/api/notifications', (req, res) => {
       expiration: new Date().toISOString(),
       completed: false
     };
-    res.write(`data: ${JSON.stringify(notification)}\n\n`);
+    res.write('data: ${JSON.stringify(notification)}\n\n');
   }, 5000);
 
   // Clean up interval when connection is closed
@@ -349,6 +365,7 @@ app.get('/api/notifications', (req, res) => {
     res.end();
   });
 });
+
 // Start the server
 const PORT = 5000;
 app.listen(PORT, () => {

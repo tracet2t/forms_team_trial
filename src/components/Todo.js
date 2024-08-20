@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 import TodoList from './TodoList';
 import './Todo.css';
 
-function Todo() {
+function Todo({ onLogout }) {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState('');
   const [todos, setTodos] = useState(() => {
     const savedTodos = localStorage.getItem('todos');
     return savedTodos ? JSON.parse(savedTodos) : [];
@@ -22,62 +23,106 @@ function Todo() {
   const [searchTerm, setSearchTerm] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [editTodoId, setEditTodoId] = useState(null);
-  const [notifications, setNotifications] = useState([]); // New state for notifications
+  const [notifications, setNotifications] = useState([]);
 
-// Fetch Todos
-const fetchTodos = async () => {
-  const userId = localStorage.getItem('userId');
-  try {
-    const response = await axios.get('http://localhost:5000/api/todos', {
-      params: {
-        userId, // Pass the userId in the request
-        status: filter,
-        sortBy: sortBy,
-        search: searchTerm,
-      },
-    });
-    setTodos(response.data);
-    localStorage.setItem('todos', JSON.stringify(response.data));
-  } catch (error) {
-    console.error('Error fetching todos:', error);
-  }
-};
-
-// Add or Edit Todo
-const addOrEditTodo = async () => {
-  const userId = localStorage.getItem('userId');
-  try {
-    if (newTodo.title.trim()) {
-      const todoData = { ...newTodo, userId };
-      if (editMode) {
-        await axios.put(`http://localhost:5000/api/todos/${editTodoId}`, todoData);
-        setEditMode(false);
-        setEditTodoId(null);
+  useEffect(() => {
+    //collect the from database with unique user id
+    const fetchUserData = async () => {
+      const storedUserId = localStorage.getItem('userId');
+      if (storedUserId) {
+        try {
+          const response = await axios.get(`http://localhost:5000/api/users/${storedUserId}`);
+          setUserName(response.data.name);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          navigate('/login');
+        }
       } else {
-        await axios.post('http://localhost:5000/api/todos', todoData);
+        navigate('/login');
       }
-      fetchTodos();
-    }
-  } catch (error) {
-    console.error('Error adding or editing todo:', error);
-  }
-};
+    };
 
+    fetchUserData();
+  }, [navigate]);
+
+  //reset forms
+  const resetForm = () => {
+    setNewTodo({
+      title: '',
+      description: '',
+      dueDate: '',
+      expiration: '',
+      priority: 'Medium',
+    });
+  };
   
 
+  // Get task from the server
+  const fetchTodos = async () => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      console.error('User ID is missing. Please make sure the user is logged in.');
+      return;
+    }
+    
+    try {
+      const response = await axios.get('http://localhost:5000/api/todos', {
+        params: {
+          userId,
+          status: filter,
+          sortBy: sortBy,
+          search: searchTerm,
+        },
+      });
+      setTodos(response.data);
+      localStorage.setItem('todos', JSON.stringify(response.data));
+    } catch (error) {
+      console.error('Error fetching todos:', error);
+    }
+  };
+  
+// Add,Edit Tasks
+  const addOrEditTodo = async () => {
+    const userId = localStorage.getItem('userId');
+    
+    if (!userId) {
+      console.error('User ID is missing. Please make sure the user is logged in.');
+      return;
+    }
+  
+    try {
+      if (newTodo.title.trim()) {
+        const todoData = { ...newTodo, userId };
+        if (editMode) {
+          await axios.put(`http://localhost:5000/api/todos/${editTodoId}`, todoData);
+          setEditMode(false);
+          setEditTodoId(null);
+        } else {
+          await axios.post('http://localhost:5000/api/todos', todoData);
+        }
+        resetForm(); // Reset the form
+        fetchTodos();
+      }
+    } catch (error) {
+      console.error('Error adding or editing todo:', error);
+    }
+  };
+  
+  //delete tasks
   const deleteTodo = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/todos/${id}`);
-      fetchTodos(); // Fetch the updated todos list after deletion
+      fetchTodos();
     } catch (error) {
       console.error('Error deleting todo:', error);
     }
   };
 
+  //Mark task as completeted
   const markAsCompleted = async (id) => {
     try {
       await axios.patch(`http://localhost:5000/api/todos/${id}/complete`);
-      fetchTodos(); // Fetch the updated todos list after marking as completed
+      fetchTodos();
     } catch (error) {
       console.error('Error marking todo as completed:', error);
     }
@@ -95,16 +140,18 @@ const addOrEditTodo = async () => {
     setEditTodoId(todo.id);
   };
 
+  //Logout form dashboard
   const handleLogout = () => {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
     navigate('/login');
   };
 
   useEffect(() => {
     fetchTodos();
   }, [filter, sortBy, searchTerm]);
-
+// Notification 
   useEffect(() => {
-    // Establish an SSE connection to receive notifications
     const eventSource = new EventSource('http://localhost:5000/api/notifications');
 
     eventSource.onmessage = (event) => {
@@ -112,7 +159,6 @@ const addOrEditTodo = async () => {
       setNotifications((prevNotifications) => [...prevNotifications, newNotification]);
     };
 
-    // Clean up the EventSource connection when the component unmounts
     return () => {
       eventSource.close();
     };
@@ -120,9 +166,10 @@ const addOrEditTodo = async () => {
 
   return (
     <div data-testid="todo-1">
-      <div className='head'>TODO APPLICATION</div>
-      <button onClick={handleLogout} className="logout-button">Logout</button>
-      
+      <div className='head'>TODO APPLICATION </div>
+
+      <button onClick={onLogout} className="logout-button">Logout</button>
+
       <div className="web">
         <h1>Add Task</h1>
         <input
@@ -164,10 +211,10 @@ const addOrEditTodo = async () => {
       </div>
 
       <div className='web2'>
-      <div className="filter-sort-container">
+        <div className="filter-sort-container">
           <label>Search</label>
           <input
-           className='searcht'
+            className='searcht'
             type="text"
             placeholder="Search todos"
             value={searchTerm}
@@ -188,7 +235,7 @@ const addOrEditTodo = async () => {
       </div>
 
       <div className='y'>
-      <h1>My Todo Tasks</h1>
+        <h1>My Todo Tasks</h1>
         <ul className='todo-list-container'>
           <TodoList
             todos={todos}
@@ -201,6 +248,7 @@ const addOrEditTodo = async () => {
 
       <div className="notifications">
         <div className='ti'>Notifications</div>
+        <div className="user-greeting">Hello, {userName}!</div>
         <ul>
           {notifications.map((notification, index) => (
             <li key={index}>
