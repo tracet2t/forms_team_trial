@@ -5,11 +5,11 @@ describe('Task API', () => {
     let createdTaskId;
 
     beforeAll((done) => {
-        server = app.listen(3001, () => done()); 
+        server = app.listen(3001, () => done());
     });
 
     afterAll((done) => {
-        server.close(done); 
+        server.close(done);
     });
 
     it('should create a new task', async () => {
@@ -90,7 +90,7 @@ describe('Task API', () => {
             .expect(404);
     });
 
-    // New test cases for expirationDate
+    // test cases for expirationDate
 
     it('should create a new task with expirationDate', async () => {
         const response = await request(app)
@@ -161,7 +161,7 @@ describe('Task API', () => {
         expect(response.body.expirationDate).toBe('2025-01-01');
     });
 
-    // New test cases for viewing task list with filter and sort
+    //test cases for viewing task list with filter and sort
 
     it('should get all tasks with default view', async () => {
         const response = await request(app)
@@ -230,13 +230,109 @@ describe('Task API', () => {
     it('should get tasks sorted by priority', async () => {
         const response = await request(app).get('/tasks?sortBy=priority');
         expect(response.status).toBe(200);
-    
+
         const tasks = response.body;
         expect(tasks[0].priority).toBe('high');
         expect(tasks[1].priority).toBe('medium');
         expect(tasks[2].priority).toBe('low');
     });
-    
-    
-    
+
+    // test case for task notifications
+    it('should send a notification for a task approaching its expiration date', async () => {
+        // Create a new task with an expiration date
+        const response = await request(app)
+            .post('/tasks')
+            .send({
+                title: 'Test Task for Notifications',
+                description: 'This task will have a notification sent.',
+                dueDate: '2024-12-31',
+                priority: 'high',
+                expirationDate: '2024-12-30'
+            })
+            .expect('Content-Type', /json/)
+            .expect(201);
+
+        const taskId = response.body.id;
+
+        const notifyResponse = await request(app)
+            .get(`/tasks/${taskId}/notifications`)
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        expect(notifyResponse.body).toHaveProperty('notification');
+        expect(notifyResponse.body.notification).toBe('Reminder: Task "Test Task for Notifications" is approaching its expiration date.');
+    });
+
+    // test cases for search functionality
+    it('should search tasks by title', async () => {
+        // Create tasks
+        await request(app)
+            .post('/tasks')
+            .send({
+                title: 'Search Task 1',
+                description: 'This is the first search task.',
+                dueDate: '2024-12-31',
+                priority: 'low'
+            })
+            .expect(201);
+
+        await request(app)
+            .post('/tasks')
+            .send({
+                title: 'Search Task 2',
+                description: 'This is the second search task.',
+                dueDate: '2024-12-31',
+                priority: 'high'
+            })
+            .expect(201);
+
+        // Search by title
+        const response = await request(app)
+            .get('/tasks?search=Search Task 1')
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        expect(response.body).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                title: 'Search Task 1'
+            })
+        ]));
+    });
+
+    it('should search tasks by description', async () => {
+        // Create tasks
+        await request(app)
+            .post('/tasks')
+            .send({
+                title: 'Search Task A',
+                description: 'Search description A',
+                dueDate: '2024-12-31',
+                priority: 'medium'
+            })
+            .expect(201);
+
+        await request(app)
+            .post('/tasks')
+            .send({
+                title: 'Search Task B',
+                description: 'Search description B',
+                dueDate: '2024-12-31',
+                priority: 'medium'
+            })
+            .expect(201);
+
+        // Search by description
+        const response = await request(app)
+            .get('/tasks?search=Search description A')
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        expect(response.body).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                description: 'Search description A'
+            })
+        ]));
+    });
+
+
 });
