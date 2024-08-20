@@ -8,6 +8,7 @@ function EditTask({ taskId, onUpdate, onCancel }) {
   const [priority, setPriority] = useState('');
   const [error, setError] = useState('');
 
+  // Fetch task data for editing when the component mounts or taskId changes
   useEffect(() => {
     const fetchTask = async () => {
       try {
@@ -29,6 +30,7 @@ function EditTask({ taskId, onUpdate, onCancel }) {
     fetchTask();
   }, [taskId]);
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -40,6 +42,7 @@ function EditTask({ taskId, onUpdate, onCancel }) {
     setError('');
 
     const updatedTask = {
+      id: taskId,
       title,
       description,
       due_date,
@@ -57,7 +60,7 @@ function EditTask({ taskId, onUpdate, onCancel }) {
 
       if (response.ok) {
         const savedTask = await response.json();
-        onUpdate(savedTask);
+        onUpdate(savedTask);  // Call onUpdate with the updated task
       } else {
         console.error('Failed to update task');
       }
@@ -107,7 +110,7 @@ function EditTask({ taskId, onUpdate, onCancel }) {
           onChange={(e) => setPriority(e.target.value)}
           className="form-input"
         >
-          <option value="Select">Select</option>
+          <option value="">Select</option>  {/* Corrected the default option */}
           <option value="High">High</option>
           <option value="Medium">Medium</option>
           <option value="Low">Low</option>
@@ -119,4 +122,4 @@ function EditTask({ taskId, onUpdate, onCancel }) {
   );
 }
 
-export default EditTask
+export default EditTask;
