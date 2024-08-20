@@ -1,0 +1,61 @@
+/* EditTask.css */
+
+/* Style for the form container */
+.edit-task-form {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #e9ecef;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Style for form groups */
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  /* Style for form inputs and textarea */
+  .form-input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* Style for the error message */
+  .error-message {
+    color: red;
+    margin-bottom: 16px;
+  }
+  
+  /* Style for the save button */
+  .edit-task-submit-button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .edit-task-submit-button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Style for the cancel button */
+  .cancel-button {
+    padding: 10px 15px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+  
+  .cancel-button:hover {
+    background-color: #5a6268;
+  }
+  

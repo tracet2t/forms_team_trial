@@ -26,7 +26,7 @@ db.serialize(() => {
 app.post('/tasks', (req, res) => {
     const { title, description, due_date, priority } = req.body;
     const stmt = db.prepare(`INSERT INTO tasks (title, description, due_date, priority) VALUES (?, ?, ?, ?)`);
-    console.log('Priority:', priority); // Debugging line
+    console.log(req.body);  // Log the incoming data for debugging
     stmt.run(title, description, due_date, priority, function(err) {
         if (err) {
             return res.status(500).json({ error: 'Failed to create task' });
@@ -36,13 +36,17 @@ app.post('/tasks', (req, res) => {
     stmt.finalize();
 });
 
-// routes (GET /tasks)
-app.get('/tasks', (req, res) => {
-    db.all('SELECT * FROM tasks', (err, rows) => {
+// GET /tasks/:id route to retrieve a specific task by its ID
+app.get('/tasks/:id', (req, res) => {
+    const { id } = req.params;
+    db.get('SELECT * FROM tasks WHERE id = ?', [id], (err, row) => {
         if (err) {
-            return res.status(500).json({ error: 'Failed to retrieve tasks' });
+            return res.status(500).json({ error: 'Failed to retrieve task' });
         }
-        res.status(200).json(rows);
+        if (!row) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.status(200).json(row);
     });
 });
 
@@ -54,5 +58,25 @@ const closeServer = () => {
     server.close();
     db.close();
 };
+
+
+// PUT /tasks/:id route to edit a task
+app.put('/tasks/:id', (req, res) => {
+    const { title, description, due_date, priority } = req.body;
+    const { id } = req.params;
+
+    const stmt = db.prepare(`UPDATE tasks SET title = ?, description = ?, due_date = ?, priority = ? WHERE id = ?`);
+    stmt.run(title, description, due_date, priority, id, function(err) {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to update task' });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.status(200).json({ id, title, description, due_date, priority });
+    });
+    stmt.finalize();
+});
+
 
 module.exports = { app, closeServer, db };

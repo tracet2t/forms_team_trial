@@ -1,7 +1,7 @@
 const request = require('supertest');
 const path = require('path');
 const fs = require('fs');
-const { app, closeServer, db } = require('../server'); // Adjust path if necessary
+const { app, closeServer, db } = require('../server'); 
 const dbPath = path.join(__dirname, '..', 'tasks.db');
 
 // Before all tests, ensure the database is created
@@ -70,5 +70,42 @@ describe('GET /tasks', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(1); // Adjust based on your setup
     expect(response.body[0].title).toBe('Existing Task');
+  });
+});
+
+// Additional test for PUT /tasks/:id
+describe('PUT /tasks/:id', () => {
+  let taskId;
+
+  // Create a task before running the test
+  beforeEach((done) => {
+    db.run(
+      `INSERT INTO tasks (title, description, due_date, priority) VALUES (?, ?, ?, ?)`,
+      ['Initial Task', 'Initial description', '2024-12-31', 'Medium'],
+      function (err) {
+        if (err) return done(err);
+        taskId = this.lastID;
+        done();
+      }
+    );
+  });
+
+  it('should update the task with new data', async () => {
+    const updatedTask = {
+      title: 'Updated Task',
+      description: 'Updated description',
+      due_date: '2024-11-30',
+      priority: 'High'
+    };
+
+    const response = await request(app)
+      .put(`/tasks/${taskId}`)
+      .send(updatedTask);
+
+    expect(response.status).toBe(200);
+    expect(response.body.title).toBe('Updated Task');
+    expect(response.body.description).toBe('Updated description');
+    expect(response.body.due_date).toBe('2024-11-30');
+    expect(response.body.priority).toBe('High');
   });
 });

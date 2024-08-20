@@ -1,14 +1,35 @@
-import React, { useState } from 'react';
-import './AddTask.css';
+import React, { useState, useEffect } from 'react';
+import './EditTask.css';
 
-function AddTask({ onAdd }) {
+function EditTask({ taskId, onUpdate, onCancel }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [due_date, setDueDate] = useState('');
   const [priority, setPriority] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const fetchTask = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/tasks/${taskId}`);
+        if (response.ok) {
+          const task = await response.json();
+          setTitle(task.title);
+          setDescription(task.description);
+          setDueDate(task.due_date);
+          setPriority(task.priority);
+        } else {
+          console.error('Failed to fetch task');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    fetchTask();
+  }, [taskId]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (title.trim() === '') {
@@ -18,24 +39,35 @@ function AddTask({ onAdd }) {
 
     setError('');
 
-    const newTask = {
-      id: Date.now(),
+    const updatedTask = {
       title,
       description,
       due_date,
       priority,
     };
 
-    onAdd(newTask);
+    try {
+      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedTask),
+      });
 
-    setTitle('');
-    setDescription('');
-    setDueDate('');
-    setPriority('');
+      if (response.ok) {
+        const savedTask = await response.json();
+        onUpdate(savedTask);
+      } else {
+        console.error('Failed to update task');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   return (
-    <form className="add-task-form" onSubmit={handleSubmit}>
+    <form className="edit-task-form" onSubmit={handleSubmit}>
       {error && <p className="error-message">{error}</p>}
       <div className="form-group">
         <label htmlFor="title">Title</label>
@@ -81,9 +113,10 @@ function AddTask({ onAdd }) {
           <option value="Low">Low</option>
         </select>
       </div>
-      <button type="submit" className="add-task-submit-button">Add Task</button>
+      <button type="submit" className="edit-task-submit-button">Save Changes</button>
+      <button type="button" className="cancel-button" onClick={onCancel}>Cancel</button>
     </form>
   );
 }
 
-export default AddTask;
+export default EditTask
