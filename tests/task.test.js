@@ -19,7 +19,7 @@ describe('Task API', () => {
                 title: 'Test Task',
                 description: 'This is a test task',
                 dueDate: '2024-12-31',
-                priority: 'High'
+                priority: 'high'
             })
             .expect('Content-Type', /json/)
             .expect(201);
@@ -29,7 +29,7 @@ describe('Task API', () => {
         expect(response.body.title).toBe('Test Task');
         expect(response.body.description).toBe('This is a test task');
         expect(response.body.dueDate).toBe('2024-12-31');
-        expect(response.body.priority).toBe('High');
+        expect(response.body.priority).toBe('high');
     });
 
     it('should get all tasks', async () => {
@@ -44,7 +44,7 @@ describe('Task API', () => {
                 title: 'Test Task',
                 description: 'This is a test task',
                 dueDate: '2024-12-31',
-                priority: 'High'
+                priority: 'high'
             })
         ]));
     });
@@ -56,7 +56,7 @@ describe('Task API', () => {
                 title: 'Updated Task',
                 description: 'This task has been updated',
                 dueDate: '2025-01-01',
-                priority: 'Medium'
+                priority: 'medium'
             })
             .expect('Content-Type', /json/)
             .expect(200);
@@ -64,7 +64,7 @@ describe('Task API', () => {
         expect(response.body.title).toBe('Updated Task');
         expect(response.body.description).toBe('This task has been updated');
         expect(response.body.dueDate).toBe('2025-01-01');
-        expect(response.body.priority).toBe('Medium');
+        expect(response.body.priority).toBe('medium');
     });
 
     it('should mark a task as completed', async () => {
@@ -99,7 +99,7 @@ describe('Task API', () => {
                 title: 'Test Task with Expiration',
                 description: 'This is a test task with expiration date',
                 dueDate: '2024-12-31',
-                priority: 'High',
+                priority: 'high',
                 expirationDate: '2024-12-30'
             })
             .expect('Content-Type', /json/)
@@ -110,7 +110,7 @@ describe('Task API', () => {
         expect(response.body.title).toBe('Test Task with Expiration');
         expect(response.body.description).toBe('This is a test task with expiration date');
         expect(response.body.dueDate).toBe('2024-12-31');
-        expect(response.body.priority).toBe('High');
+        expect(response.body.priority).toBe('high');
         expect(response.body.expirationDate).toBe('2024-12-30');
     });
 
@@ -126,7 +126,7 @@ describe('Task API', () => {
                 title: 'Test Task with Expiration',
                 description: 'This is a test task with expiration date',
                 dueDate: '2024-12-31',
-                priority: 'High',
+                priority: 'high',
                 expirationDate: '2024-12-30'
             })
         ]));
@@ -139,7 +139,7 @@ describe('Task API', () => {
                 title: 'Updated Task with New Expiration',
                 description: 'This task has been updated with a new expiration date',
                 dueDate: '2025-01-01',
-                priority: 'Medium',
+                priority: 'medium',
                 expirationDate: '2025-01-01'
             })
             .expect('Content-Type', /json/)
@@ -148,7 +148,7 @@ describe('Task API', () => {
         expect(response.body.title).toBe('Updated Task with New Expiration');
         expect(response.body.description).toBe('This task has been updated with a new expiration date');
         expect(response.body.dueDate).toBe('2025-01-01');
-        expect(response.body.priority).toBe('Medium');
+        expect(response.body.priority).toBe('medium');
         expect(response.body.expirationDate).toBe('2025-01-01');
     });
 
@@ -228,16 +228,15 @@ describe('Task API', () => {
     });
 
     it('should get tasks sorted by priority', async () => {
-        const response = await request(app)
-            .get('/tasks?sort=priority')
-            .expect('Content-Type', /json/)
-            .expect(200);
+        const response = await request(app).get('/tasks?sortBy=priority');
+        expect(response.status).toBe(200);
     
-        // Check that tasks are sorted by priority order: High, Medium, Low
         const tasks = response.body;
-        expect(tasks[0].priority).toBe('High');
-        expect(tasks[1].priority).toBe('Medium');
-        expect(tasks[2].priority).toBe('Low');
+        expect(tasks[0].priority).toBe('high');
+        expect(tasks[1].priority).toBe('medium');
+        expect(tasks[2].priority).toBe('low');
     });
+    
+    
     
 });

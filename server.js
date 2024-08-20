@@ -83,7 +83,16 @@ app.get('/tasks', (req, res) => {
     }
 
     if (sortBy) {
-        query += " ORDER BY " + (sortBy === 'priority' ? "priority" : "dueDate");
+        if (sortBy === 'priority') {
+            // Custom sorting by priority: High, Medium, Low
+            query += ` ORDER BY CASE 
+                          WHEN priority = 'high' THEN 1
+                          WHEN priority = 'medium' THEN 2
+                          WHEN priority = 'low' THEN 3
+                      END`;
+        } else if (sortBy === 'dueDate') {
+            query += " ORDER BY dueDate";
+        }
     }
 
     db.all(query, params, (err, rows) => {
@@ -93,6 +102,7 @@ app.get('/tasks', (req, res) => {
         res.json(rows);
     });
 });
+
 
 // Endpoint to get a specific task
 app.get('/tasks/:id', (req, res) => {
