@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up Page</title>
     <link rel="stylesheet" href="signup.css">
-     
 </head>
 <body>
     <div class="container">
-        <form>
+        <form onsubmit="return validateForm()">
           
           <div class="input-group">
             <label>Full Name</label>
@@ -23,30 +22,28 @@
             <span id="phone-error"></span>
           </div>
     
-          
           <div class="input-group">
             <label>Email Id</label>
             <input type="email" placeholder="Enter Email" id="Cemail" onkeyup="validateEmail()">
             <span id="email-error"></span>
-        </div>
-        
+          </div>
 
           <div class="input-group">
             <label>Password</label>
-            <input type="password" placeholder="Enter Password">
+            <input type="password" placeholder="Enter Password" id="Cpassword" onkeyup="validatePassword()">
             <span id="pw-error"></span>
           </div>
 
           <div class="input-group">
             <label>Confirm Password</label>
-            <input type="password" placeholder="Enter Password again">
+            <input type="password" placeholder="Enter Password again" id="CconfirmPassword" onkeyup="validateConfirmPassword()">
             <span id="CP-error"></span>
           </div>
-    
-        <button type="submit">Submit</button>
-        <span id="Submit-error">Fix errors!</span>
+        
+          <button type="submit">Submit</button>
+          <span id="Submit-error"></span>
        
-      </form>
+        </form>
     </div>
     <script src="signup.js"></script>
 </body>
