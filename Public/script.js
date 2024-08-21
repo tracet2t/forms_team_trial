@@ -15,12 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function fetchTasks() {
         const status = document.getElementById('statusFilter').value;
         const sortBy = document.getElementById('sortFilter').value;
-        const search = searchField.value.trim();
+        const search = searchField.value.trim().toLowerCase();
 
-        fetch(`/tasks?status=${status}&sortBy=${sortBy}&search=${search}`)
+        fetch(`/tasks?status=${status}&sortBy=${sortBy}`)
             .then(response => response.json())
             .then(data => {
-                tasks = data;
+                tasks = data.filter(task => task.description.toLowerCase().includes(search));
                 renderTasks();
             })
             .catch(error => console.error('Error fetching tasks:', error));

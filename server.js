@@ -74,8 +74,11 @@ app.post('/tasks', (req, res) => {
 // Endpoint to get all tasks with optional filtering, search, and sorting
 app.get('/tasks', (req, res) => {
     const { status = 'all', sortBy = 'dueDate', search = '' } = req.query;
-    let query = "SELECT * FROM tasks WHERE title LIKE ?";
-    const params = [`%${search}%`];
+    let query = `
+        SELECT * FROM tasks 
+        WHERE (title LIKE ? OR description LIKE ?)
+    `;
+    const params = [`%${search}%`, `%${search}%`];
 
     if (status !== 'all') {
         query += " AND completed = ?";
@@ -100,6 +103,7 @@ app.get('/tasks', (req, res) => {
         res.json(rows);
     });
 });
+
 
 
 
