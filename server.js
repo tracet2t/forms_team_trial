@@ -71,28 +71,26 @@ app.post('/tasks', (req, res) => {
     stmt.finalize();
 });
 
-// Endpoint to get all tasks with optional filtering and sorting
+// Endpoint to get all tasks with optional filtering, search, and sorting
 app.get('/tasks', (req, res) => {
-    const { status, sortBy } = req.query;
-    let query = "SELECT * FROM tasks";
-    let params = [];
+    const { status = 'all', sortBy = 'dueDate', search = '' } = req.query;
+    let query = "SELECT * FROM tasks WHERE title LIKE ?";
+    const params = [`%${search}%`];
 
-    if (status && status !== 'all') {
-        query += " WHERE completed = ?";
+    if (status !== 'all') {
+        query += " AND completed = ?";
         params.push(status === 'completed' ? 1 : 0);
     }
 
-    if (sortBy) {
-        if (sortBy === 'priority') {
-            // Custom sorting by priority: High, Medium, Low
-            query += ` ORDER BY CASE 
+    if (sortBy === 'priority') {
+        // Custom sorting by priority: High, Medium, Low
+        query += ` ORDER BY CASE 
                           WHEN priority = 'high' THEN 1
                           WHEN priority = 'medium' THEN 2
                           WHEN priority = 'low' THEN 3
                       END`;
-        } else if (sortBy === 'dueDate') {
-            query += " ORDER BY dueDate";
-        }
+    } else if (sortBy === 'dueDate') {
+        query += " ORDER BY dueDate";
     }
 
     db.all(query, params, (err, rows) => {
@@ -102,6 +100,7 @@ app.get('/tasks', (req, res) => {
         res.json(rows);
     });
 });
+
 
 
 // Endpoint to get a specific task

@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const descriptionField = document.getElementById('description');
     const dueDateField = document.getElementById('dueDate');
     const priorityField = document.getElementById('priority');
-    const expirationField = document.getElementById('expirationDate'); 
+    const expirationField = document.getElementById('expirationDate');
+    const searchField = document.getElementById('search');
 
     let tasks = [];
     let editingTaskId = null;
@@ -14,8 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function fetchTasks() {
         const status = document.getElementById('statusFilter').value;
         const sortBy = document.getElementById('sortFilter').value;
+        const search = searchField.value.trim();
 
-        fetch(`/tasks?status=${status}&sortBy=${sortBy}`)
+        fetch(`/tasks?status=${status}&sortBy=${sortBy}&search=${search}`)
             .then(response => response.json())
             .then(data => {
                 tasks = data;
@@ -105,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
             descriptionField.value = task.description;
             dueDateField.value = task.dueDate;
             priorityField.value = task.priority;
-            expirationField.value = task.expirationDate; 
+            expirationField.value = task.expirationDate;
             editingTaskId = task.id;
             submitButton.textContent = 'Update Task';
         }
@@ -138,7 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Error marking task as complete:', error));
     };
 
-    // Event listeners for filters and sorting
+    // Event listeners for filters, sorting, and search
     document.getElementById('statusFilter').addEventListener('change', fetchTasks);
     document.getElementById('sortFilter').addEventListener('change', fetchTasks);
+    searchField.addEventListener('input', fetchTasks);
 });

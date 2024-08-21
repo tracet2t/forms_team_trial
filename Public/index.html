@@ -29,9 +29,9 @@
 
                 <label for="priority">Priority</label>
                 <select id="priority">
-                    <option value="low">low</option>
-                    <option value="medium">medium</option>
-                    <option value="high">high</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
                 </select>
 
                 <button type="submit" id="submitButton">Add Task</button>
@@ -41,6 +41,9 @@
         <!-- Task List Container -->
         <div class="task-list-container">
             <div class="filters">
+                <label for="search">Search:</label>
+                <input type="text" id="search" placeholder="Search tasks...">
+
                 <label for="statusFilter">Filter by Status:</label>
                 <select id="statusFilter">
                     <option value="all">All</option>
