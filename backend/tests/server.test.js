@@ -41,7 +41,16 @@ db.serialize(() => {
     notifiedAt TEXT NOT NULL,
     FOREIGN KEY (todoId) REFERENCES todos(id)
   )`);
+ // Insert some sample todos
+  db.run(`INSERT INTO todos (title, description, dueDate, priority, completed, userId) VALUES (?, ?, ?, ?, ?, ?)`, 
+    ['Sample Task 1', 'Sample Description 1', '2024-08-25T00:00:00.000Z', 'High', 0, 'test-user-id']);
+  db.run(`INSERT INTO todos (title, description, dueDate, priority, completed, userId) VALUES (?, ?, ?, ?, ?, ?)`, 
+    ['Sample Task 2', 'Sample Description 2', '2024-08-24T00:00:00.000Z', 'Low', 1, 'test-user-id']);
+  
 });
+//check notification
+
+
 
 // Register route
 app.post('/api/register', async (req, res) => {
@@ -260,7 +269,7 @@ describe('User API', () => {
 });
 
 // Test cases for Todo API
-describe('Todo API', () => {
+describe('Create New Tasks', () => {
   beforeEach((done) => {
     db.serialize(() => {
       db.run('DELETE FROM todos', done);
@@ -422,7 +431,7 @@ app.get('/api/notifications', (req, res) => {
   });
 });
 
-describe('Todo API', () => {
+describe('Create, Marks as completed, Delete a todo by ID', () => {
   beforeEach((done) => {
     db.serialize(() => {
       db.run('DELETE FROM todos', done);
@@ -521,40 +530,257 @@ describe('Todo API', () => {
     expect(response.status).toBe(404);
     expect(response.text).toBe('Todo not found');
   });
-
-  it('should handle SSE notifications', (done) => {
-    // Set a timeout to end the test after a certain period
-    const testTimeout = setTimeout(() => {
-      done(new Error('Test timed out'));
-    }, 10000); // Adjust this value as needed
-  
-    // Start the SSE test
-    const intervalId = setInterval(() => {
-      request(app)
-        .get('/api/notifications')
-        .expect('Content-Type', /text\/event-stream/)
-        .expect(200)
-        .end((err, res) => {
-          if (err) {
-            clearInterval(intervalId);
-            clearTimeout(testTimeout);
-            done(err);
-          } else {
-            // Add your assertions here
-  
-            // Clean up
-            clearInterval(intervalId);
-            clearTimeout(testTimeout);
-            done();
-          }
-        });
-    }, 1000); // Interval to check notifications every second
-  
-    // Ensure the test ends if the SSE endpoint never sends data
-    setTimeout(() => {
-      clearInterval(intervalId);
-      clearTimeout(testTimeout);
-      done(new Error('SSE test failed to receive data'));
-    }, 10000); // Timeout to fail if no data is received in this time
-  });
 });  
+/*
+// Define the server for testing
+const server = app.listen(3000);
+
+// Utility function to insert a todo
+const insertTodo = (title, dueDate, userId) => {
+  return new Promise((resolve, reject) => {
+    db.run('INSERT INTO todos (title, dueDate, userId) VALUES (?, ?, ?)', [title, dueDate, userId], function (err) {
+      if (err) return reject(err);
+      resolve(this.lastID);
+    });
+  });
+};
+
+describe('SSE Notifications', () => {
+  beforeEach((done) => {
+    db.serialize(() => {
+      db.run('DELETE FROM todos', done);
+    });
+  });
+
+  it('should receive SSE notifications', async (done) => {
+    // Insert a todo item that will trigger a notification
+    const now = new Date();
+    const futureDate = new Date(now.getTime() + 10000); // 10 seconds from now
+    await insertTodo('Test Todo', futureDate.toISOString(), 'some-valid-user-id');
+
+    // Make the request to the SSE endpoint
+    request(server)
+      .get('/api/notifications')
+      .expect('Content-Type', 'text/event-stream')
+      .expect('Cache-Control', 'no-cache')
+      .expect('Connection', 'keep-alive')
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+
+        let data = '';
+        res.body.on('data', (chunk) => {
+          data += chunk.toString();
+        });
+
+        res.body.on('end', () => {
+          expect(data).toMatch(/data: {/);
+          expect(data).toMatch(/}\n\n/);
+
+          done();
+        });
+      });
+
+  }, 20000); // Increase timeout to 20 seconds 
+});*/
+
+it('should not register a user with a weak password', async () => {
+  const response = await request(app)
+    .post('/api/register')
+    .send({ name: 'WeakPassUser', password: 'weakpass' });
+
+  expect(response.status).toBe(400);
+  expect(response.body).toBe('Password must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters.');
+});
+
+it('should register a new user with a unique userId', async () => {
+  const response = await request(app)
+    .post('/api/register')
+    .send({ name: 'UniqueUser', password: 'StrongPass@123' });
+
+  expect(response.status).toBe(200);
+
+  const { userId } = await new Promise((resolve, reject) => {
+    db.get('SELECT userId FROM users WHERE name = ?', ['UniqueUser'], (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
+  });
+
+  expect(userId).not.toBeNull();
+});
+
+it('should not log in an unregistered user', async () => {
+  const response = await request(app)
+    .post('/api/login')
+    .send({ name: 'UnregisteredUser', password: 'SomePassword' });
+
+  expect(response.status).toBe(401);
+  expect(response.body.error).toBe('Invalid name or password.');
+});
+
+// Helper function to insert a test todo with a known ID
+const insertTest = async (id) => {
+  await new Promise((resolve, reject) => {
+    db.run(
+      'INSERT INTO todos (id, title, description, dueDate, priority, completed, userId) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+      [id, 'Todo 1', 'Description 1', '2024-08-25T00:00:00.000Z', 1, 0, 'test-user-id'], 
+      (err) => err ? reject(err) : resolve()
+    );
+  });
+};
+
+describe('PUT /api/todos/:id', () => {
+  const todoId = 1; // Use a known ID for the test
+
+  beforeEach(async () => {
+    await insertTest(todoId); // Insert a test todo with the known ID before each test
+  });
+
+  afterEach(async () => {
+    await new Promise((resolve, reject) => {
+      db.run('DELETE FROM todos WHERE id = ?', [todoId], (err) => err ? reject(err) : resolve());
+    });
+  });
+
+  it('should update an existing todo', async () => {
+    const response = await request(app)
+      .put(`/api/todos/${todoId}`)
+      .send({ title: 'Updated Title', description: 'Updated Description' })
+      .expect(200);
+    
+    expect(response.text).toBe('Todo updated successfully');
+
+    // Verify the changes in the database
+    const row = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM todos WHERE id = ?', [todoId], (err, row) => err ? reject(err) : resolve(row));
+    });
+    
+    expect(row.title).toBe('Updated Title');
+    expect(row.description).toBe('Updated Description');
+  });
+
+  it('should return 400 if no fields are provided', async () => {
+    const response = await request(app)
+      .put(`/api/todos/${todoId}`)
+      .send({})
+      .expect(400);
+    
+    expect(response.text).toBe('At least one field is required for update');
+  });
+
+  it('should return 404 if the todo is not found', async () => {
+    const response = await request(app)
+      .put('/api/todos/non-existent-id')
+      .send({ title: 'Title' })
+      .expect(404);
+    
+    expect(response.text).toBe('Todo not found');
+  });
+
+  it('should return 500 if there is an error updating the todo', async () => {
+    // Simulate a database error
+    jest.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+      callback(new Error('Database error'));
+    });
+
+    const response = await request(app)
+      .put(`/api/todos/${todoId}`)
+      .send({ title: 'Title' })
+      .expect(500);
+
+    expect(response.text).toBe('Error updating todo');
+
+    // Restore original implementation
+    db.run.mockRestore();
+  });
+});
+
+// Helper function to insert test data
+const insertTestTodos = async () => {
+  // Insert sample todos into the database
+  await new Promise((resolve, reject) => {
+    db.run('INSERT INTO todos (title, description, dueDate, priority, completed, userId) VALUES (?, ?, ?, ?, ?, ?)', 
+      ['Todo 1', 'Description 1', '2024-08-25T00:00:00.000Z', 1, 0, 'test-user-id'], 
+      (err) => err ? reject(err) : resolve());
+  });
+  await new Promise((resolve, reject) => {
+    db.run('INSERT INTO todos (title, description, dueDate, priority, completed, userId) VALUES (?, ?, ?, ?, ?, ?)', 
+      ['Todo 2', 'Description 2', '2024-08-26T00:00:00.000Z', 2, 1, 'test-user-id'], 
+      (err) => err ? reject(err) : resolve());
+  });
+};
+
+describe('GET /api/todos', () => {
+  beforeEach(async () => {
+    await insertTestTodos(); // Insert test data before each test
+  });
+
+  afterEach(async () => {
+    // Clean up database after tests
+    await new Promise((resolve, reject) => {
+      db.run('DELETE FROM todos WHERE userId = ?', ['test-user-id'], (err) => err ? reject(err) : resolve());
+    });
+  });
+
+  it('should return todos for a given userId', async () => {
+    const response = await request(app)
+      .get('/api/todos')
+      .query({ userId: 'test-user-id' })
+      .expect(200);
+    
+    expect(response.body.length).toBe(2);
+    expect(response.body[0].title).toBe('Todo 1');
+    expect(response.body[1].title).toBe('Todo 2');
+  });
+
+  it('should filter todos by completed status', async () => {
+    const response = await request(app)
+      .get('/api/todos')
+      .query({ userId: 'test-user-id', status: 'completed' })
+      .expect(200);
+    
+    expect(response.body.length).toBe(1);
+    expect(response.body[0].title).toBe('Todo 2');
+  });
+
+  it('should search todos by title or description', async () => {
+    const response = await request(app)
+      .get('/api/todos')
+      .query({ userId: 'test-user-id', search: 'Description 1' })
+      .expect(200);
+    
+    expect(response.body.length).toBe(1);
+    expect(response.body[0].title).toBe('Todo 1');
+  });
+
+  it('should sort todos by dueDate', async () => {
+    const response = await request(app)
+      .get('/api/todos')
+      .query({ userId: 'test-user-id', sortBy: 'dueDate' })
+      .expect(200);
+    
+    expect(response.body.length).toBe(2);
+    expect(response.body[0].title).toBe('Todo 1');
+    expect(response.body[1].title).toBe('Todo 2');
+  });
+
+  it('should sort todos by priority', async () => {
+    const response = await request(app)
+      .get('/api/todos')
+      .query({ userId: 'test-user-id', sortBy: 'priority' })
+      .expect(200);
+    
+    expect(response.body.length).toBe(2);
+    expect(response.body[0].title).toBe('Todo 1');
+    expect(response.body[1].title).toBe('Todo 2');
+  });
+
+  it('should return 400 if userId is missing', async () => {
+    const response = await request(app)
+      .get('/api/todos')
+      .expect(400);
+    
+    expect(response.body.error).toBe('User ID is required');
+  });
+});

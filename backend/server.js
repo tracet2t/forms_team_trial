@@ -24,6 +24,7 @@ db.serialize(() => {
     userId INTEGER,
     FOREIGN KEY (userId) REFERENCES users(id)
   )`);
+  
 
   db.run(`CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,11 +39,14 @@ db.serialize(() => {
     password TEXT NOT NULL,
     userId TEXT NOT NULL UNIQUE
   )`);``
+
+ 
 });
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10; // Number of salt rounds for bcrypt
 const { v4: uuidv4 } = require('uuid');
+
 // Register a new user
 app.post('/api/register', async (req, res) => {
   const { name, password } = req.body;
