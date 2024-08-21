@@ -4,15 +4,27 @@ const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const db = new sqlite3.Database(':memory:');
+// Initialize the SQLite database with file storage
+const db = new sqlite3.Database(path.join(__dirname, 'tasks.db'));
 
 // Middleware
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Initialize in-memory database and create tasks table
+// Create the tasks table if it doesn't exist
 db.serialize(() => {
-    db.run("CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT, description TEXT, dueDate TEXT, priority TEXT, completed BOOLEAN, expirationDate TEXT, expirationTime TEXT)");
+    db.run(`
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY,
+            title TEXT,
+            description TEXT,
+            dueDate TEXT,
+            priority TEXT,
+            completed BOOLEAN,
+            expirationDate TEXT,
+            expirationTime TEXT
+        )
+    `);
 });
 
 // Routes
