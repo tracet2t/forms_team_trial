@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up Page</title>
     <link rel="stylesheet" href="signup.css">
-    <script src="https://kit.fontawesome.com/c4254e24a8.js" crossorigin="anonymous"></script>  
+     
 </head>
 <body>
     <div class="container">
@@ -23,11 +23,13 @@
             <span id="phone-error"></span>
           </div>
     
+          
           <div class="input-group">
             <label>Email Id</label>
-            <input type="email" placeholder="Enter Email">
+            <input type="email" placeholder="Enter Email" id="Cemail" onkeyup="validateEmail()">
             <span id="email-error"></span>
-          </div>   
+        </div>
+        
 
           <div class="input-group">
             <label>Password</label>

@@ -18,7 +18,7 @@ function validateName() {
         return false;
     }
     
-    nameError.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+    nameError.innerHTML = 'valid';
     return true;
 }
 
@@ -38,6 +38,24 @@ function validatePhone() {
         return false;
     }
     
-    phoneError.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+    phoneError.innerHTML = 'valid';
     return true;
 }
+function validateEmail(){
+    var email = document.getElementById('Cemail').value;
+    var emailError = document.getElementById('email-error');
+    
+    if(email.length == 0 ){
+        emailError.innerHTML = 'Email is required';
+        return false;
+    }
+    if(!email.match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/)){
+        emailError.innerHTML = 'Invalid email format';
+        return false;
+    }
+    emailError.innerHTML = ' Valid';
+    return true;
+}
+
+
+
