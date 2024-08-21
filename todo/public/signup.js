@@ -5,7 +5,6 @@ var pwError = document.getElementById('pw-error');
 var CPError = document.getElementById('CP-error');
 var SubmitError = document.getElementById('Submit-error');
 
-
 function validateName() {
     var name = document.getElementById('Cname').value.trim(); 
     
@@ -19,6 +18,26 @@ function validateName() {
         return false;
     }
     
-    nameError.innerHTML = 'Valid';
+    nameError.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+    return true;
+}
+
+function validatePhone() {
+    var phone = document.getElementById('Cphone').value;
+
+    if(phone.length == 0){
+        phoneError.innerHTML = 'Phone is required';
+        return false;
+    }
+    if(phone.length !== 10){
+        phoneError.innerHTML = 'Should be 10 digits';
+        return false;
+    }
+    if(!phone.match(/^[0-9]{10}$/)){
+        phoneError.innerHTML = 'Phone number should be digits only';
+        return false;
+    }
+    
+    phoneError.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
     return true;
 }

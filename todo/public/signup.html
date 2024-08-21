@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up Page</title>
     <link rel="stylesheet" href="signup.css">
+    <script src="https://kit.fontawesome.com/c4254e24a8.js" crossorigin="anonymous"></script>  
 </head>
 <body>
     <div class="container">
@@ -13,41 +14,38 @@
           <div class="input-group">
             <label>Full Name</label>
             <input type="text" placeholder="Enter your name" id="Cname" onkeyup="validateName()">
-            <span id="name-error"> </span>
+            <span id="name-error"></span>
           </div>
     
           <div class="input-group">
             <label>Phone No.</label>
-            <input type="tel" placeholder="Enter your mobile">
-            <span id="phone-error"> </span>
+            <input type="tel" placeholder="Enter your mobile" id="Cphone" onkeyup="validatePhone()">
+            <span id="phone-error"></span>
           </div>
     
           <div class="input-group">
             <label>Email Id</label>
             <input type="email" placeholder="Enter Email">
-            <span id="email-error"> </span>
+            <span id="email-error"></span>
           </div>   
 
           <div class="input-group">
             <label>Password</label>
-            <input type="pw" placeholder="Enter Password">
-            <span id="pw-error"> </span>
+            <input type="password" placeholder="Enter Password">
+            <span id="pw-error"></span>
           </div>
 
           <div class="input-group">
             <label>Confirm Password</label>
-            <input type="email" placeholder="Enter Password again">
-            <span id="CP-error"> </span>
+            <input type="password" placeholder="Enter Password again">
+            <span id="CP-error"></span>
           </div>
     
-        <button>Submit</button>
-        <span id="Submit-error"> Fix errors!</span>
+        <button type="submit">Submit</button>
+        <span id="Submit-error">Fix errors!</span>
        
       </form>
-    
-    
-      
-      </div>
-      <script src="signup.js"></script>
+    </div>
+    <script src="signup.js"></script>
 </body>
 </html>
